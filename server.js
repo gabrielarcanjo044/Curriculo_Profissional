@@ -95,11 +95,24 @@ app.post("/salvar-word", async (req, res) => {
   if (!texto) return res.status(400).json({ erro: "Texto vazio." });
 
   const linhas = texto.split("\n");
+  const ehMaiusculo = (t) => t && t === t.toUpperCase() && t.length > 2 && !/^\d/.test(t);
+
+  // Primeira linha em maiúsculo = nome do candidato
+  const primeiraLinhaMaiuscula = linhas.find(l => ehMaiusculo(l.trim()));
+  const nomeDoc = primeiraLinhaMaiuscula?.trim() || nome || "";
+  let nomePulado = false;
+
   const paragrafos = linhas.map((linha) => {
     const trimmed = linha.trim();
 
+    // Pula a primeira ocorrência do nome (já vai no cabeçalho)
+    if (!nomePulado && trimmed === nomeDoc) {
+      nomePulado = true;
+      return null;
+    }
+
     // Linha em MAIÚSCULO = título de seção
-    if (trimmed && trimmed === trimmed.toUpperCase() && trimmed.length > 2 && !/^\d/.test(trimmed)) {
+    if (ehMaiusculo(trimmed)) {
       return new Paragraph({
         text: trimmed,
         heading: HeadingLevel.HEADING_2,
@@ -118,10 +131,8 @@ app.post("/salvar-word", async (req, res) => {
       children: [new TextRun({ text: trimmed, size: 22 })],
       spacing: { after: 60 },
     });
-  });
+  }).filter(Boolean);
 
-  // Cabeçalho com nome
-  const nomeDoc = nome || "Currículo";
   const docParagrafos = [
     new Paragraph({
       children: [new TextRun({ text: nomeDoc, bold: true, size: 32 })],
