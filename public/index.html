@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador de Currículo com IA</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>📄 Gerador de Currículo</h1>
+      <p>Preencha os dados ou envie um PDF antigo para atualizar</p>
+    </header>
+
+    <!-- Abas -->
+    <div class="abas">
+      <button class="aba ativa" onclick="trocarAba('formulario')">✏️ Digitar Dados</button>
+      <button class="aba" onclick="trocarAba('pdf')">📎 Atualizar PDF</button>
+    </div>
+
+    <!-- ABA 1: Formulário manual -->
+    <div id="aba-formulario">
+      <form id="form-curriculo">
+
+        <section>
+          <h2>Dados Pessoais</h2>
+          <div class="linha">
+            <div class="campo">
+              <label>Nome completo *</label>
+              <input type="text" name="nome" placeholder="Ex: João da Silva" required />
+            </div>
+            <div class="campo">
+              <label>Telefone</label>
+              <input type="text" name="telefone" placeholder="Ex: (31) 99999-0000" />
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>E-mail</label>
+              <input type="email" name="email" placeholder="Ex: joao@email.com" />
+            </div>
+            <div class="campo">
+              <label>Cidade / Bairro</label>
+              <input type="text" name="cidade" placeholder="Ex: Belo Horizonte - MG" />
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Objetivo e Formação</h2>
+          <div class="campo">
+            <label>Objetivo profissional *</label>
+            <input type="text" name="objetivo" placeholder="Ex: Auxiliar de Serviços Gerais, Ajudante Geral, Atendente" required />
+          </div>
+          <div class="campo">
+            <label>Escolaridade *</label>
+            <select name="escolaridade" required>
+              <option value="">Selecione...</option>
+              <option value="Ensino Fundamental Incompleto">Fundamental Incompleto</option>
+              <option value="Ensino Fundamental Completo">Fundamental Completo</option>
+              <option value="Ensino Médio Incompleto">Médio Incompleto</option>
+              <option value="Ensino Médio Completo">Médio Completo</option>
+              <option value="Ensino Superior Incompleto">Superior Incompleto</option>
+              <option value="Ensino Superior Completo">Superior Completo</option>
+            </select>
+          </div>
+        </section>
+
+        <section>
+          <h2>Experiências Profissionais *</h2>
+          <p class="dica">💡 Pode ser informal. Ex: "Trabalhou 5 anos como pedreiro por conta própria. Fez bicos de ajudante de carga."</p>
+          <textarea name="experiencias" rows="5" placeholder="Descreva as experiências do cliente aqui, do jeito que ele contou..." required></textarea>
+        </section>
+
+        <section>
+          <h2>Habilidades</h2>
+          <p class="dica">💡 Ex: "Pontual, trabalha bem em equipe, sabe dirigir, experiência com informática básica"</p>
+          <textarea name="habilidades" rows="3" placeholder="Liste as habilidades do cliente..."></textarea>
+        </section>
+
+        <section>
+          <h2>Cursos e Certificados</h2>
+          <p class="dica">💡 Ex: "Curso de informática básica no SENAI (2022)"</p>
+          <textarea name="cursos" rows="3" placeholder="Liste cursos e certificados (se houver)..."></textarea>
+        </section>
+
+        <button type="submit" id="btn-gerar">✨ Gerar Currículo</button>
+      </form>
+    </div>
+
+    <!-- ABA 2: Atualizar PDF -->
+    <div id="aba-pdf" class="oculto">
+      <form id="form-pdf" enctype="multipart/form-data">
+
+        <section>
+          <h2>Currículo Antigo em PDF</h2>
+          <p class="dica">💡 Envie o PDF do currículo antigo. A IA vai reescrever tudo de forma mais profissional.</p>
+          <div class="campo">
+            <label>Selecionar arquivo PDF *</label>
+            <input type="file" name="pdf" accept=".pdf" required id="input-pdf" />
+          </div>
+          <div id="nome-arquivo" class="nome-arquivo oculto"></div>
+        </section>
+
+        <section>
+          <h2>Informações Novas (opcional)</h2>
+          <p class="dica">💡 Quer adicionar algo novo? Ex: "Trabalhou como motorista de aplicativo de 2023 até hoje. Novo objetivo: Motorista."</p>
+          <textarea name="novaInfo" rows="4" placeholder="Descreva aqui qualquer informação nova que deve ser incluída no currículo..."></textarea>
+        </section>
+
+        <button type="submit" id="btn-gerar-pdf">✨ Atualizar Currículo</button>
+      </form>
+    </div>
+
+    <!-- Resultado -->
+    <div id="resultado" class="oculto">
+      <div class="resultado-header">
+        <h2>📋 Currículo Gerado</h2>
+        <div class="resultado-acoes">
+          <button type="button" id="btn-copiar" onclick="copiarTexto()">📋 Copiar</button>
+          <button type="button" id="btn-pdf-salvar" onclick="salvarPDF()">💾 Salvar PDF</button>
+          <button type="button" id="btn-word" onclick="salvarWord()">📄 Salvar Word</button>
+        </div>
+      </div>
+      <pre id="texto-curriculo"></pre>
+    </div>
+
+  </div>
+
+  <script>
+    const TEMPLATE = new URLSearchParams(window.location.search).get('template') || 'classico';
+
+    // ── Troca de abas ──────────────────────────────────────────────────────────
+    function trocarAba(aba) {
+      document.getElementById("aba-formulario").classList.toggle("oculto", aba !== "formulario");
+      document.getElementById("aba-pdf").classList.toggle("oculto", aba !== "pdf");
+      document.querySelectorAll(".aba").forEach((btn, i) => {
+        btn.classList.toggle("ativa", (i === 0 && aba === "formulario") || (i === 1 && aba === "pdf"));
+      });
+      document.getElementById("resultado").classList.add("oculto");
+    }
+
+    document.getElementById("input-pdf").addEventListener("change", function () {
+      const el = document.getElementById("nome-arquivo");
+      if (this.files[0]) {
+        el.textContent = "📄 " + this.files[0].name;
+        el.classList.remove("oculto");
+      } else {
+        el.classList.add("oculto");
+      }
+    });
+
+    // ── Envio de formulários ───────────────────────────────────────────────────
+    document.getElementById("form-curriculo").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const dados = Object.fromEntries(new FormData(e.target).entries());
+      await enviarEExibir("/gerar-curriculo", "json", dados, "btn-gerar");
+    });
+
+    document.getElementById("form-pdf").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      await enviarEExibir("/atualizar-pdf", "form", formData, "btn-gerar-pdf");
+    });
+
+    async function enviarEExibir(url, tipo, dados, btnId) {
+      const btn = document.getElementById(btnId);
+      const resultado = document.getElementById("resultado");
+      const textoCurriculo = document.getElementById("texto-curriculo");
+
+      btn.disabled = true;
+      btn.textContent = "⏳ Gerando...";
+      resultado.classList.add("oculto");
+      textoCurriculo.textContent = "";
+
+      try {
+        const opcoes = tipo === "json"
+          ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) }
+          : { method: "POST", body: dados };
+
+        const resposta = await fetch(url, opcoes);
+        if (!resposta.ok) { const err = await resposta.json(); alert("Erro: " + err.erro); return; }
+
+        resultado.classList.remove("oculto");
+        const reader = resposta.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          textoCurriculo.textContent += decoder.decode(value, { stream: true });
+          textoCurriculo.scrollIntoView({ behavior: "smooth", block: "end" });
+        }
+      } catch (err) {
+        alert("Erro de conexão: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "✨ " + (btnId === "btn-gerar" ? "Gerar Currículo" : "Atualizar Currículo");
+      }
+    }
+
+    // ── Copiar ─────────────────────────────────────────────────────────────────
+    function copiarTexto() {
+      navigator.clipboard.writeText(document.getElementById("texto-curriculo").textContent).then(() => {
+        const btn = document.getElementById("btn-copiar");
+        btn.textContent = "✅ Copiado!";
+        setTimeout(() => { btn.textContent = "📋 Copiar"; }, 2000);
+      });
+    }
+
+    // ── Salvar Word ────────────────────────────────────────────────────────────
+    async function salvarWord() {
+      const texto = document.getElementById("texto-curriculo").textContent;
+      if (!texto.trim()) { alert("Gere o currículo primeiro!"); return; }
+      const btn = document.getElementById("btn-word");
+      btn.disabled = true; btn.textContent = "⏳ Gerando...";
+      try {
+        const nome = document.querySelector("input[name='nome']")?.value || "";
+        const resposta = await fetch("/salvar-word", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ texto, nome })
+        });
+        if (!resposta.ok) { alert("Erro ao gerar Word."); return; }
+        const blob = await resposta.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = resposta.headers.get("Content-Disposition")?.match(/filename="(.+)"/)?.[1] || "Curriculo.docx";
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        alert("Erro: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "📄 Salvar Word";
+      }
+    }
+
+    // ── Salvar PDF com template real ───────────────────────────────────────────
+    function salvarPDF() {
+      const texto = document.getElementById("texto-curriculo").textContent;
+      if (!texto.trim()) { alert("Gere o currículo primeiro!"); return; }
+
+      const { nome, secoes } = parsearTexto(texto);
+      const html = gerarHTML(nome, secoes, TEMPLATE);
+
+      const janela = window.open("", "_blank");
+      janela.document.write(html);
+      janela.document.close();
+      setTimeout(() => janela.print(), 800);
+    }
+
+    // ── Parser do texto ────────────────────────────────────────────────────────
+    function parsearTexto(texto) {
+      const linhas = texto.split("\n");
+      let nome = "";
+      const secoes = [];
+      let secaoAtual = null;
+
+      const ehTitulo = (t) =>
+        t.length > 2 && t === t.toUpperCase() && /[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(t);
+
+      for (const linha of linhas) {
+        const t = linha.trim();
+        if (!t) { if (secaoAtual) secaoAtual.linhas.push(""); continue; }
+        if (ehTitulo(t)) {
+          if (secaoAtual) secoes.push(secaoAtual);
+          secaoAtual = { titulo: t, linhas: [] };
+        } else if (secaoAtual) {
+          secaoAtual.linhas.push(t);
+        } else {
+          if (!nome) nome = t;
+        }
+      }
+      if (secaoAtual) secoes.push(secaoAtual);
+
+      if (!nome) {
+        const dp = secoes.find(s => s.titulo.includes("DADOS"));
+        if (dp) {
+          const nl = dp.linhas.find(l => /nome:/i.test(l));
+          if (nl) nome = nl.replace(/.*nome:\s*/i, "").trim();
+        }
+      }
+      return { nome: nome || "Currículo", secoes };
+    }
+
+    function esc(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function renderSecoes(secoes) {
+      return secoes.map(s => `
+        <div class="secao">
+          <div class="sec-titulo">${esc(s.titulo)}</div>
+          ${s.linhas.map(l => l
+            ? `<div class="linha">${esc(l)}</div>`
+            : `<div style="height:5px"></div>`
+          ).join("")}
+        </div>`).join("");
+    }
+
+    function gerarHTML(nome, secoes, template) {
+      switch (template) {
+        case "moderno":   return htmlModerno(nome, secoes);
+        case "executivo": return htmlExecutivo(nome, secoes);
+        case "simples":   return htmlSimples(nome, secoes);
+        default:          return htmlClassico(nome, secoes);
+      }
+    }
+
+    // CLÁSSICO — cabeçalho branco, títulos em azul com sublinhado
+    function htmlClassico(nome, secoes) {
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;font-size:10.5pt;color:#1a1a1a;padding:16mm 20mm}
+.nome{text-align:center;font-size:17pt;font-weight:bold;margin-bottom:3px}
+.divisor{border:none;border-top:2.5px solid #00b4d8;margin:7px 0 14px}
+.secao{margin-bottom:13px}
+.sec-titulo{font-size:9.5pt;font-weight:bold;text-transform:uppercase;color:#00b4d8;border-bottom:1.5px solid #00b4d8;padding-bottom:2px;margin-bottom:6px;letter-spacing:0.06em}
+.linha{margin-bottom:3px;line-height:1.55}
+@media print{body{padding:10mm 14mm}-webkit-print-color-adjust:exact;print-color-adjust:exact}
+</style></head><body>
+<div class="nome">${esc(nome)}</div>
+<hr class="divisor">
+${renderSecoes(secoes)}
+</body></html>`;
+    }
+
+    // MODERNO — barra lateral com gradiente
+    function htmlModerno(nome, secoes) {
+      const isSide = (s) => /DADOS|CONTATO|HABILIDADES|CURSOS/i.test(s.titulo);
+      const sidebar = secoes.filter(isSide);
+      const principal = secoes.filter(s => !isSide(s));
+
+      const rSide = (secs) => secs.map(s => `
+        <div class="s-secao">
+          <div class="s-titulo">${esc(s.titulo)}</div>
+          ${s.linhas.map(l => l ? `<div class="s-linha">${esc(l)}</div>` : '<div style="height:4px"></div>').join("")}
+        </div>`).join("");
+
+      const rMain = (secs) => secs.map(s => `
+        <div class="secao">
+          <div class="sec-titulo">${esc(s.titulo)}</div>
+          ${s.linhas.map(l => l ? `<div class="linha">${esc(l)}</div>` : '<div style="height:4px"></div>').join("")}
+        </div>`).join("");
+
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;font-size:10pt;display:flex;min-height:100vh}
+.sidebar{width:195px;min-height:100vh;background:linear-gradient(180deg,#00b4d8,#7b2fbe);color:#fff;padding:18px 14px;flex-shrink:0}
+.s-nome{font-size:12.5pt;font-weight:bold;margin-bottom:16px;line-height:1.3;word-break:break-word}
+.s-secao{margin-bottom:14px}
+.s-titulo{font-size:8pt;font-weight:bold;text-transform:uppercase;letter-spacing:0.07em;border-bottom:1px solid rgba(255,255,255,0.35);padding-bottom:2px;margin-bottom:5px;color:rgba(255,255,255,0.85)}
+.s-linha{font-size:9pt;color:rgba(255,255,255,0.88);margin-bottom:3px;line-height:1.45;word-break:break-word}
+.main{flex:1;padding:18px 20px;color:#1a1a1a}
+.secao{margin-bottom:13px}
+.sec-titulo{font-size:9.5pt;font-weight:bold;text-transform:uppercase;color:#7b2fbe;border-bottom:2px solid #00b4d8;padding-bottom:2px;margin-bottom:6px;letter-spacing:0.05em}
+.linha{margin-bottom:3px;line-height:1.55}
+@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+</style></head><body>
+<div class="sidebar">
+  <div class="s-nome">${esc(nome)}</div>
+  ${rSide(sidebar)}
+</div>
+<div class="main">${rMain(principal)}</div>
+</body></html>`;
+    }
+
+    // EXECUTIVO — cabeçalho escuro, faixa gradiente
+    function htmlExecutivo(nome, secoes) {
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
+.header{background:linear-gradient(135deg,#1a1a2e,#2d1b69);color:#fff;padding:20px 24px;text-align:center}
+.header-nome{font-size:17pt;font-weight:bold;letter-spacing:0.04em}
+.faixa{height:4px;background:linear-gradient(90deg,#00b4d8,#7b2fbe)}
+.corpo{padding:15px 24px}
+.secao{margin-bottom:13px}
+.sec-titulo{font-size:9.5pt;font-weight:bold;text-transform:uppercase;color:#1a1a2e;border-bottom:2px solid #2d1b69;padding-bottom:3px;margin-bottom:6px;letter-spacing:0.07em}
+.linha{margin-bottom:3px;line-height:1.6}
+@media print{.header,.faixa{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="header"><div class="header-nome">${esc(nome)}</div></div>
+<div class="faixa"></div>
+<div class="corpo">${renderSecoes(secoes)}</div>
+</body></html>`;
+    }
+
+    // SIMPLES — sem cores, tipografia limpa
+    function htmlSimples(nome, secoes) {
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Calibri,Arial,sans-serif;font-size:10.5pt;color:#111;padding:16mm 22mm}
+.nome{font-size:16pt;font-weight:bold;margin-bottom:2px}
+.divisor{border:none;border-top:1px solid #777;margin:7px 0 14px}
+.secao{margin-bottom:13px}
+.sec-titulo{font-size:10pt;font-weight:bold;text-transform:uppercase;color:#333;margin-bottom:5px;letter-spacing:0.05em}
+.linha{margin-bottom:3px;line-height:1.55}
+</style></head><body>
+<div class="nome">${esc(nome)}</div>
+<hr class="divisor">
+${renderSecoes(secoes)}
+</body></html>`;
+    }
+  </script>
+
+</body>
+</html>

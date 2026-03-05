@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerador de Currículo — Escolha o Modelo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --grad: linear-gradient(135deg, #00b4d8, #7b2fbe);
+      --grad-hover: linear-gradient(135deg, #0096b7, #6320a0);
+      --azul: #00b4d8;
+      --roxo: #7b2fbe;
+      --texto: #e2e8f0;
+      --sub: #8892a4;
+      --fundo: #0d0d1a;
+      --card: #16162a;
+      --borda: #2a2a44;
+      --card-sombra: 0 4px 24px rgba(123,47,190,0.25);
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: var(--fundo);
+      color: var(--texto);
+      min-height: 100vh;
+      padding: 50px 20px 60px;
+    }
+
+    /* ── Fundo decorativo ── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -150px; left: -150px;
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(0,180,216,0.1), transparent 70%);
+      pointer-events: none;
+    }
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -150px; right: -150px;
+      width: 450px; height: 450px;
+      background: radial-gradient(circle, rgba(123,47,190,0.1), transparent 70%);
+      pointer-events: none;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 44px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(123,47,190,0.15);
+      border: 1px solid rgba(123,47,190,0.35);
+      color: #c084fc;
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 4px 14px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      letter-spacing: 0.04em;
+    }
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 800;
+      background: var(--grad);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+    header p { color: var(--sub); font-size: 1rem; }
+
+    /* ── Grid de cards ── */
+    .modelos {
+      display: flex;
+      gap: 22px;
+      justify-content: center;
+      flex-wrap: wrap;
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      padding: 22px 18px 18px;
+      width: 208px;
+      cursor: pointer;
+      border: 2px solid var(--borda);
+      transition: all 0.22s;
+      text-align: center;
+    }
+    .card:hover {
+      border-color: var(--azul);
+      transform: translateY(-6px);
+      box-shadow: 0 8px 28px rgba(0,180,216,0.18);
+    }
+    .card.selecionado {
+      border-color: var(--roxo);
+      background: rgba(123,47,190,0.12);
+      box-shadow: var(--card-sombra);
+    }
+
+    .card h3 { font-size: 0.95rem; color: var(--texto); margin-top: 14px; margin-bottom: 4px; font-weight: 700; }
+    .card p  { font-size: 0.76rem; color: var(--sub); }
+
+    /* ── Miniaturas ── */
+    .mini {
+      width: 164px;
+      height: 214px;
+      background: #f8fafc;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 0 auto;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* MODELO 1: Clássico */
+    .mini-classico .topo {
+      background: #fff;
+      padding: 10px 8px 6px;
+      text-align: center;
+      border-bottom: 2.5px solid #00b4d8;
+    }
+    .mini-classico .nome-bar { height: 7px; background: #1e1e2e; border-radius: 2px; width: 70%; margin: 0 auto 4px; }
+    .mini-classico .sub-bar  { height: 4px; background: #b0b8c8; border-radius: 2px; width: 50%; margin: 0 auto; }
+    .mini-classico .corpo    { padding: 8px; }
+    .mini-classico .sec-title{ height: 4px; background: linear-gradient(90deg,#00b4d8,#7b2fbe); border-radius: 2px; width: 50%; margin-bottom: 5px; }
+    .mini-classico .linha-txt { height: 3px; background: #e5e9f0; border-radius: 2px; margin-bottom: 3px; }
+    .mini-classico .linha-txt.curta { width: 70%; }
+    .mini-classico .sep { height: 1px; background: #f0f0f5; margin: 6px 0; }
+
+    /* MODELO 2: Moderno */
+    .mini-moderno { display: flex; }
+    .mini-moderno .sidebar {
+      width: 52px;
+      background: linear-gradient(180deg, #00b4d8, #7b2fbe);
+      padding: 10px 5px;
+    }
+    .mini-moderno .sb-circle { width: 30px; height: 30px; background: rgba(255,255,255,0.9); border-radius: 50%; margin: 0 auto 6px; }
+    .mini-moderno .sb-bar    { height: 3px; background: rgba(255,255,255,0.55); border-radius: 2px; margin-bottom: 4px; }
+    .mini-moderno .sb-bar.c  { width: 60%; }
+    .mini-moderno .conteudo  { flex: 1; padding: 8px 6px; }
+    .mini-moderno .nome-bar  { height: 6px; background: #1e1e2e; border-radius: 2px; width: 80%; margin-bottom: 3px; }
+    .mini-moderno .sub-bar   { height: 3px; background: #b0b8c8; border-radius: 2px; width: 55%; margin-bottom: 8px; }
+    .mini-moderno .sec-title { height: 3px; background: #00b4d8; border-radius: 2px; width: 55%; margin-bottom: 5px; }
+    .mini-moderno .linha-txt { height: 3px; background: #e5e9f0; border-radius: 2px; margin-bottom: 3px; }
+    .mini-moderno .linha-txt.curta { width: 70%; }
+    .mini-moderno .sep { height: 1px; background: #f0f0f5; margin: 5px 0; }
+
+    /* MODELO 3: Executivo */
+    .mini-executivo .header-dark {
+      background: linear-gradient(135deg, #1e1e2e, #2d1b69);
+      padding: 10px 10px 8px;
+    }
+    .mini-executivo .nome-bar { height: 7px; background: #fff; border-radius: 2px; width: 65%; margin-bottom: 4px; }
+    .mini-executivo .sub-bar  { height: 3px; background: rgba(255,255,255,0.45); border-radius: 2px; width: 45%; }
+    .mini-executivo .faixa    { height: 4px; background: linear-gradient(90deg, #00b4d8, #7b2fbe); }
+    .mini-executivo .corpo    { padding: 8px; }
+    .mini-executivo .sec-title{ height: 4px; background: #1e1e2e; border-radius: 2px; width: 55%; margin-bottom: 5px; }
+    .mini-executivo .linha-txt { height: 3px; background: #e5e9f0; border-radius: 2px; margin-bottom: 3px; }
+    .mini-executivo .linha-txt.curta { width: 75%; }
+    .mini-executivo .sep { border-top: 1px solid #f0f0f5; margin: 6px 0; }
+
+    /* MODELO 4: Simples */
+    .mini-simples .corpo { padding: 12px 10px; }
+    .mini-simples .nome-bar { height: 7px; background: #1e1e2e; border-radius: 2px; width: 60%; margin-bottom: 5px; }
+    .mini-simples .sub-bar  { height: 3px; background: #c0c8d8; border-radius: 2px; width: 40%; margin-bottom: 10px; }
+    .mini-simples .sec-title{ height: 4px; background: #6b7280; border-radius: 2px; width: 50%; margin-bottom: 5px; }
+    .mini-simples .linha-txt { height: 3px; background: #e8edf5; border-radius: 2px; margin-bottom: 4px; }
+    .mini-simples .linha-txt.curta { width: 70%; }
+    .mini-simples .bullet { display: flex; align-items: center; gap: 4px; margin-bottom: 4px; }
+    .mini-simples .bullet-dot { width: 4px; height: 4px; background: #7b2fbe; border-radius: 50%; flex-shrink: 0; }
+    .mini-simples .sep { border-top: 1px solid #eef0f5; margin: 7px 0; }
+    .mini-simples .bullet .linha-txt { flex: 1; }
+
+    /* ── Botão ── */
+    .btn-area {
+      text-align: center;
+      margin-top: 40px;
+    }
+    .btn-abrir {
+      display: inline-block;
+      padding: 15px 48px;
+      background: var(--grad);
+      color: #fff;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      border: none;
+      cursor: pointer;
+      box-shadow: 0 4px 20px rgba(123,47,190,0.35);
+      transition: all 0.22s;
+      letter-spacing: 0.02em;
+    }
+    .btn-abrir:hover {
+      background: var(--grad-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(123,47,190,0.45);
+    }
+
+    .aviso {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #4a5568;
+    }
+    .aviso strong { color: var(--sub); }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="badge">✦ Powered by Claude AI</div>
+    <h1>Gerador de Currículo com IA</h1>
+    <p>Escolha o modelo e clique em <strong>Abrir App</strong> para começar</p>
+  </header>
+
+  <div class="modelos">
+
+    <!-- Modelo 1: Clássico -->
+    <div class="card" onclick="selecionar('classico', this)">
+      <div class="mini mini-classico">
+        <div class="topo">
+          <div class="nome-bar"></div>
+          <div class="sub-bar"></div>
+        </div>
+        <div class="corpo">
+          <div class="sec-title"></div>
+          <div class="linha-txt"></div>
+          <div class="linha-txt curta"></div>
+          <div class="sep"></div>
+          <div class="sec-title"></div>
+          <div class="linha-txt"></div>
+          <div class="linha-txt curta"></div>
+          <div class="linha-txt"></div>
+          <div class="sep"></div>
+          <div class="sec-title"></div>
+          <div class="linha-txt curta"></div>
+          <div class="linha-txt"></div>
+        </div>
+      </div>
+      <h3>Clássico</h3>
+      <p>Tradicional e elegante</p>
+    </div>
+
+    <!-- Modelo 2: Moderno -->
+    <div class="card" onclick="selecionar('moderno', this)">
+      <div class="mini mini-moderno">
+        <div class="sidebar">
+          <div class="sb-circle"></div>
+          <div class="sb-bar"></div>
+          <div class="sb-bar c"></div>
+          <div class="sb-bar"></div>
+          <div class="sb-bar c"></div>
+          <div class="sb-bar"></div>
+        </div>
+        <div class="conteudo">
+          <div class="nome-bar"></div>
+          <div class="sub-bar"></div>
+          <div class="sec-title"></div>
+          <div class="linha-txt"></div>
+          <div class="linha-txt curta"></div>
+          <div class="sep"></div>
+          <div class="sec-title"></div>
+          <div class="linha-txt"></div>
+          <div class="linha-txt curta"></div>
+          <div class="linha-txt"></div>
+        </div>
+      </div>
+      <h3>Moderno</h3>
+      <p>Com barra lateral colorida</p>
+    </div>
+
+    <!-- Modelo 3: Executivo -->
+    <div class="card" onclick="selecionar('executivo', this)">
+      <div class="mini mini-executivo">
+        <div class="header-dark">
+          <div class="nome-bar"></div>
+          <div class="sub-bar"></div>
+        </div>
+        <div class="faixa"></div>
+        <div class="corpo">
+          <div class="sec-title"></div>
+          <div class="linha-txt"></div>
+          <div class="linha-txt curta"></div>
+          <div class="sep"></div>
+          <div class="sec-title"></div>
+          <div class="linha-txt"></div>
+          <div class="linha-txt curta"></div>
+          <div class="linha-txt"></div>
+          <div class="sep"></div>
+          <div class="sec-title"></div>
+          <div class="linha-txt curta"></div>
+        </div>
+      </div>
+      <h3>Executivo</h3>
+      <p>Cabeçalho escuro e sóbrio</p>
+    </div>
+
+    <!-- Modelo 4: Simples -->
+    <div class="card" onclick="selecionar('simples', this)">
+      <div class="mini mini-simples">
+        <div class="corpo">
+          <div class="nome-bar"></div>
+          <div class="sub-bar"></div>
+          <div class="sec-title"></div>
+          <div class="bullet"><div class="bullet-dot"></div><div class="linha-txt"></div></div>
+          <div class="bullet"><div class="bullet-dot"></div><div class="linha-txt curta"></div></div>
+          <div class="sep"></div>
+          <div class="sec-title"></div>
+          <div class="bullet"><div class="bullet-dot"></div><div class="linha-txt"></div></div>
+          <div class="bullet"><div class="bullet-dot"></div><div class="linha-txt curta"></div></div>
+          <div class="sep"></div>
+          <div class="sec-title"></div>
+          <div class="bullet"><div class="bullet-dot"></div><div class="linha-txt"></div></div>
+        </div>
+      </div>
+      <h3>Simples</h3>
+      <p>Limpo e direto ao ponto</p>
+    </div>
+
+  </div>
+
+  <div class="btn-area">
+    <button type="button" class="btn-abrir" id="btn" onclick="abrirApp()">✨ Abrir App</button>
+    <div class="aviso">⚠️ Certifique-se de ter clicado em <strong>iniciar.bat</strong> antes.</div>
+  </div>
+
+  <script>
+    let modeloSelecionado = "classico";
+    // Seleciona o primeiro por padrão
+    document.querySelector(".card").classList.add("selecionado");
+
+    function selecionar(modelo, el) {
+      document.querySelectorAll(".card").forEach(c => c.classList.remove("selecionado"));
+      el.classList.add("selecionado");
+      modeloSelecionado = modelo;
+    }
+
+    function abrirApp() {
+      window.location.href = "http://localhost:3000?template=" + modeloSelecionado;
+    }
+  </script>
+
+</body>
+</html>
