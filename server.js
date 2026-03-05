@@ -100,14 +100,14 @@ app.post("/salvar-word", async (req, res) => {
   // Primeira linha em maiúsculo = nome do candidato
   const primeiraLinhaMaiuscula = linhas.find(l => ehMaiusculo(l.trim()));
   const nomeDoc = primeiraLinhaMaiuscula?.trim() || nome || "";
-  let nomePulado = false;
+  let primeiraCapPulada = false;
 
   const paragrafos = linhas.map((linha) => {
     const trimmed = linha.trim();
 
-    // Pula a primeira ocorrência do nome (já vai no cabeçalho)
-    if (!nomePulado && trimmed === nomeDoc) {
-      nomePulado = true;
+    // Pula a PRIMEIRA linha em maiúsculo (nome já está no cabeçalho)
+    if (!primeiraCapPulada && ehMaiusculo(trimmed)) {
+      primeiraCapPulada = true;
       return null;
     }
 
