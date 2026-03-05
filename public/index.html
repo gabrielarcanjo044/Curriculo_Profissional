@@ -279,7 +279,10 @@
       const btn = document.getElementById("btn-word");
       btn.disabled = true; btn.textContent = "⏳ Gerando...";
       try {
-        const nome = document.querySelector("input[name='nome']")?.value || "";
+        const { nome: nomeExtraido } = parsearTexto(texto);
+        const nome = (nomeExtraido && nomeExtraido !== "Currículo")
+          ? nomeExtraido
+          : (document.querySelector("input[name='nome']")?.value || "");
         const resposta = await fetch("/salvar-word", {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ texto, nome })
