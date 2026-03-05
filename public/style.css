@@ -391,6 +391,20 @@ input[type="file"]:hover {
 .tpl-executivo .tpl-bloco,
 .tpl-executivo .tpl-bloco.curto { margin: 2px 4px 0; }
 
+/* Antigo: Times New Roman, borda preta */
+.tpl-antigo { padding: 0; gap: 0; background: #fff; }
+.tpl-antigo-topo {
+  border-bottom: 2px solid #000;
+  padding: 4px 4px 3px;
+  text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.tpl-antigo-nome { height: 5px; width: 65%; background: #111; border-radius: 1px; }
+.tpl-antigo-sub  { height: 3px; width: 35%; background: #555; border-radius: 1px; }
+.tpl-antigo-corpo { padding: 4px; display: flex; flex-direction: column; gap: 2px; }
+.tpl-antigo-titulo { height: 4px; width: 55%; background: #222; border-radius: 1px;
+  text-decoration: underline; margin-top: 2px; }
+
 .oculto { display: none; }
 
 @media (max-width: 600px) {

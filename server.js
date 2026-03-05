@@ -56,23 +56,13 @@ app.post("/atualizar-pdf", upload.single("pdf"), async (req, res) => {
     return res.status(400).json({ erro: "Nenhum PDF enviado." });
   }
 
-  let textoPdf;
-  try {
-    const dados = await pdfParse(req.file.buffer);
-    textoPdf = dados.text;
-  } catch {
-    return res.status(400).json({ erro: "Não foi possível ler o PDF. Tente outro arquivo." });
-  }
-
   const novaInfo = req.body.novaInfo || "";
+  const pdfBase64 = req.file.buffer.toString("base64");
 
-  const prompt = `Você é um especialista em redação de currículos profissionais brasileiros.
+  const instrucoes = `Você é um especialista em redação de currículos profissionais brasileiros.
 
-Abaixo está o texto extraído de um currículo antigo em PDF. Reescreva-o de forma mais profissional, organizada e moderna.
+Leia o PDF acima (currículo antigo) e reescreva-o de forma mais profissional, organizada e moderna.
 ${novaInfo ? `\nADICIONE TAMBÉM as seguintes informações novas informadas pelo cliente:\n${novaInfo}` : ""}
-
-CURRÍCULO ANTIGO:
-${textoPdf}
 
 REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - PROIBIDO usar markdown: sem ##, **, *, ___, ---, ou qualquer símbolo especial
@@ -83,10 +73,39 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - Seções: DADOS PESSOAIS, OBJETIVO, FORMAÇÃO ACADÊMICA, EXPERIÊNCIA PROFISSIONAL, HABILIDADES, CURSOS (se houver)
 - Mantenha todos os dados originais
 - Melhore as descrições das experiências para soarem mais profissionais
-- OBRIGATÓRIO: use português brasileiro correto com TODOS os acentos (ção, ões, ã, é, ê, á, â, ó, ú, ç, etc.)
-- NUNCA escreva palavras sem acento`;
+- OBRIGATÓRIO: use português brasileiro correto com TODOS os acentos`;
 
-  await gerarComStream(prompt, res);
+  try {
+    const stream = client.messages.stream({
+      model: "claude-opus-4-6",
+      max_tokens: 2048,
+      messages: [{
+        role: "user",
+        content: [
+          {
+            type: "document",
+            source: { type: "base64", media_type: "application/pdf", data: pdfBase64 }
+          },
+          { type: "text", text: instrucoes }
+        ]
+      }]
+    });
+
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Transfer-Encoding", "chunked");
+
+    for await (const event of stream) {
+      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
+        res.write(event.delta.text);
+      }
+    }
+    res.end();
+  } catch (error) {
+    console.error("Erro na API:", error.message);
+    if (!res.headersSent) {
+      res.status(500).json({ erro: "Erro ao processar PDF: " + error.message });
+    }
+  }
 });
 
 // ─── Rota: Salvar como Word (.docx) ──────────────────────────────────────────
