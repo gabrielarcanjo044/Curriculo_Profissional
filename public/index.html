@@ -305,7 +305,10 @@
       if (!texto.trim()) { alert("Gere o currículo primeiro!"); return; }
 
       const { nome, secoes } = parsearTexto(texto);
-      const html = gerarHTML(nome, secoes, TEMPLATE);
+      const nomeReal = (nome && nome !== "Currículo")
+        ? nome
+        : (document.querySelector("input[name='nome']")?.value || "Currículo");
+      const html = gerarHTML(nomeReal, secoes, TEMPLATE);
 
       const janela = window.open("", "_blank");
       janela.document.write(html);
@@ -327,6 +330,11 @@
         const t = linha.trim();
         if (!t) { if (secaoAtual) secaoAtual.linhas.push(""); continue; }
         if (ehTitulo(t)) {
+          // Primeira linha em maiúsculo antes de qualquer seção = nome do candidato
+          if (!nome && secoes.length === 0 && !secaoAtual) {
+            nome = t;
+            continue;
+          }
           if (secaoAtual) secoes.push(secaoAtual);
           secaoAtual = { titulo: t, linhas: [] };
         } else if (secaoAtual) {
