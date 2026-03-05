@@ -393,7 +393,11 @@ body{font-family:Arial,sans-serif;font-size:10.5pt;color:#1a1a1a;padding:16mm 20
 .secao{margin-bottom:13px}
 .sec-titulo{font-size:9.5pt;font-weight:bold;text-transform:uppercase;color:#00b4d8;border-bottom:1.5px solid #00b4d8;padding-bottom:2px;margin-bottom:6px;letter-spacing:0.06em}
 .linha{margin-bottom:3px;line-height:1.55}
-@media print{body{padding:10mm 14mm}-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{
+  body{padding:10mm 14mm}
+  .divisor{border-top-color:#000!important}
+  .sec-titulo{color:#000!important;border-bottom-color:#000!important}
+}
 </style></head><body>
 <div class="nome">${esc(nome)}</div>
 <hr class="divisor">
@@ -432,7 +436,11 @@ body{font-family:Arial,sans-serif;font-size:10pt;display:flex;min-height:100vh}
 .secao{margin-bottom:13px}
 .sec-titulo{font-size:9.5pt;font-weight:bold;text-transform:uppercase;color:#7b2fbe;border-bottom:2px solid #00b4d8;padding-bottom:2px;margin-bottom:6px;letter-spacing:0.05em}
 .linha{margin-bottom:3px;line-height:1.55}
-@media print{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+@media print{
+  body{display:block}
+  .sidebar{background:#222!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sec-titulo{color:#000!important;border-bottom-color:#000!important}
+}
 </style></head><body>
 <div class="sidebar">
   <div class="s-nome">${esc(nome)}</div>
@@ -455,7 +463,11 @@ body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
 .secao{margin-bottom:13px}
 .sec-titulo{font-size:9.5pt;font-weight:bold;text-transform:uppercase;color:#1a1a2e;border-bottom:2px solid #2d1b69;padding-bottom:3px;margin-bottom:6px;letter-spacing:0.07em}
 .linha{margin-bottom:3px;line-height:1.6}
-@media print{.header,.faixa{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media print{
+  .header{background:#222!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .faixa{background:#555!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sec-titulo{color:#000!important;border-bottom-color:#000!important}
+}
 </style></head><body>
 <div class="header"><div class="header-nome">${esc(nome)}</div></div>
 <div class="faixa"></div>
