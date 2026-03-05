@@ -43,7 +43,9 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - Retorne APENAS o texto do currículo, sem comentários
 - Seções: DADOS PESSOAIS, OBJETIVO, FORMAÇÃO ACADÊMICA, EXPERIÊNCIA PROFISSIONAL, HABILIDADES${cursos ? ", CURSOS E CERTIFICADOS" : ""}
 - Nas experiências, descreva as funções de forma profissional
-- Se a escolaridade for baixa, valorize as experiências práticas`;
+- Se a escolaridade for baixa, valorize as experiências práticas
+- OBRIGATÓRIO: use português brasileiro correto com TODOS os acentos (ção, ões, ção, ã, é, ê, á, â, ó, ú, ç, etc.)
+- NUNCA escreva palavras sem acento: manutenção (não manutencao), realização (não realizacao), serviços (não servicos), endereço (não endereco), período (não periodo), etc.`;
 
   await gerarComStream(prompt, res);
 });
@@ -80,7 +82,9 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - Retorne APENAS o texto do currículo, sem comentários
 - Seções: DADOS PESSOAIS, OBJETIVO, FORMAÇÃO ACADÊMICA, EXPERIÊNCIA PROFISSIONAL, HABILIDADES, CURSOS (se houver)
 - Mantenha todos os dados originais
-- Melhore as descrições das experiências para soarem mais profissionais`;
+- Melhore as descrições das experiências para soarem mais profissionais
+- OBRIGATÓRIO: use português brasileiro correto com TODOS os acentos (ção, ões, ã, é, ê, á, â, ó, ú, ç, etc.)
+- NUNCA escreva palavras sem acento`;
 
   await gerarComStream(prompt, res);
 });

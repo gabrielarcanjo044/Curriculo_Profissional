@@ -381,7 +381,7 @@
 
     // CLÁSSICO — cabeçalho branco, títulos em azul com sublinhado
     function htmlClassico(nome, secoes) {
-      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(nome)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;font-size:10.5pt;color:#1a1a1a;padding:16mm 20mm}
@@ -416,7 +416,7 @@ ${renderSecoes(secoes)}
           ${s.linhas.map(l => l ? `<div class="linha">${esc(l)}</div>` : '<div style="height:4px"></div>').join("")}
         </div>`).join("");
 
-      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(nome)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Arial,sans-serif;font-size:10pt;display:flex;min-height:100vh}
@@ -441,7 +441,7 @@ body{font-family:Arial,sans-serif;font-size:10pt;display:flex;min-height:100vh}
 
     // EXECUTIVO — cabeçalho escuro, faixa gradiente
     function htmlExecutivo(nome, secoes) {
-      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(nome)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
@@ -462,7 +462,7 @@ body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
 
     // SIMPLES — sem cores, tipografia limpa
     function htmlSimples(nome, secoes) {
-      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Currículo</title>
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(nome)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:Calibri,Arial,sans-serif;font-size:10.5pt;color:#111;padding:16mm 22mm}
