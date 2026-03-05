@@ -14,6 +14,50 @@
       <p>Preencha os dados ou envie um PDF antigo para atualizar</p>
     </header>
 
+    <!-- Seletor de Template -->
+    <div class="template-selector">
+      <p class="template-label">Escolha o estilo do currículo:</p>
+      <div class="template-cards">
+        <div class="template-card ativo" data-template="classico" onclick="selecionarTemplate('classico')">
+          <div class="tpl-preview tpl-classico">
+            <div class="tpl-nome-bar"></div>
+            <div class="tpl-linha azul"></div>
+            <div class="tpl-bloco"></div>
+            <div class="tpl-bloco curto"></div>
+          </div>
+          <span>Clássico</span>
+        </div>
+        <div class="template-card" data-template="moderno" onclick="selecionarTemplate('moderno')">
+          <div class="tpl-preview tpl-moderno">
+            <div class="tpl-sidebar"></div>
+            <div class="tpl-main">
+              <div class="tpl-bloco"></div>
+              <div class="tpl-bloco curto"></div>
+            </div>
+          </div>
+          <span>Moderno</span>
+        </div>
+        <div class="template-card" data-template="executivo" onclick="selecionarTemplate('executivo')">
+          <div class="tpl-preview tpl-executivo">
+            <div class="tpl-header-escuro"></div>
+            <div class="tpl-faixa-grad"></div>
+            <div class="tpl-bloco"></div>
+            <div class="tpl-bloco curto"></div>
+          </div>
+          <span>Executivo</span>
+        </div>
+        <div class="template-card" data-template="simples" onclick="selecionarTemplate('simples')">
+          <div class="tpl-preview tpl-simples">
+            <div class="tpl-nome-bar cinza"></div>
+            <div class="tpl-linha cinza"></div>
+            <div class="tpl-bloco cinza"></div>
+            <div class="tpl-bloco curto cinza"></div>
+          </div>
+          <span>Simples</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Abas -->
     <div class="abas">
       <button class="aba ativa" onclick="trocarAba('formulario')">✏️ Digitar Dados</button>
@@ -44,6 +88,16 @@
             <div class="campo">
               <label>Cidade / Bairro</label>
               <input type="text" name="cidade" placeholder="Ex: Belo Horizonte - MG" />
+            </div>
+          </div>
+          <div class="linha">
+            <div class="campo">
+              <label>WhatsApp</label>
+              <input type="text" name="whatsapp" placeholder="Ex: (31) 99999-0000" />
+            </div>
+            <div class="campo">
+              <label>LinkedIn</label>
+              <input type="text" name="linkedin" placeholder="Ex: linkedin.com/in/joaosilva" />
             </div>
           </div>
         </section>
@@ -130,7 +184,14 @@
   </div>
 
   <script>
-    const TEMPLATE = new URLSearchParams(window.location.search).get('template') || 'classico';
+    let TEMPLATE = 'classico';
+
+    function selecionarTemplate(t) {
+      TEMPLATE = t;
+      document.querySelectorAll(".template-card").forEach(c => {
+        c.classList.toggle("ativo", c.dataset.template === t);
+      });
+    }
 
     // ── Troca de abas ──────────────────────────────────────────────────────────
     function trocarAba(aba) {
@@ -156,6 +217,7 @@
     document.getElementById("form-curriculo").addEventListener("submit", async (e) => {
       e.preventDefault();
       const dados = Object.fromEntries(new FormData(e.target).entries());
+      dados.template = TEMPLATE;
       await enviarEExibir("/gerar-curriculo", "json", dados, "btn-gerar");
     });
 

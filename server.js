@@ -14,7 +14,12 @@ app.use(express.static("public"));
 
 // ─── Rota: Gerar currículo a partir do formulário ───────────────────────────
 app.post("/gerar-curriculo", async (req, res) => {
-  const { nome, telefone, email, cidade, objetivo, escolaridade, experiencias, habilidades, cursos } = req.body;
+  const { nome, telefone, email, cidade, whatsapp, linkedin, objetivo, escolaridade, experiencias, habilidades, cursos } = req.body;
+
+  const contatoExtra = [
+    whatsapp ? `- WhatsApp: ${whatsapp}` : "",
+    linkedin ? `- LinkedIn: ${linkedin}` : "",
+  ].filter(Boolean).join("\n");
 
   const prompt = `Você é um especialista em redação de currículos profissionais brasileiros. Crie um currículo completo e bem redigido com os dados abaixo.
 
@@ -23,6 +28,7 @@ DADOS DO CLIENTE:
 - Telefone: ${telefone || "Não informado"}
 - E-mail: ${email || "Não informado"}
 - Cidade: ${cidade || "Não informada"}
+${contatoExtra}
 - Objetivo profissional: ${objetivo}
 - Escolaridade: ${escolaridade}
 - Experiências profissionais: ${experiencias}
