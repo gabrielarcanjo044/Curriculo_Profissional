@@ -18,7 +18,23 @@
     <div class="template-selector">
       <p class="template-label">Escolha o estilo do currículo:</p>
       <div class="template-cards">
-        <div class="template-card ativo" data-template="classico" onclick="selecionarTemplate('classico')">
+        <div class="template-card ativo" data-template="antigo" onclick="selecionarTemplate('antigo')">
+          <div class="tpl-preview tpl-antigo">
+            <div class="tpl-antigo-topo">
+              <div class="tpl-antigo-nome"></div>
+              <div class="tpl-antigo-sub"></div>
+            </div>
+            <div class="tpl-antigo-corpo">
+              <div class="tpl-antigo-titulo"></div>
+              <div class="tpl-bloco cinza"></div>
+              <div class="tpl-bloco curto cinza"></div>
+              <div class="tpl-antigo-titulo"></div>
+              <div class="tpl-bloco cinza"></div>
+            </div>
+          </div>
+          <span>Antigo</span>
+        </div>
+        <div class="template-card" data-template="classico" onclick="selecionarTemplate('classico')">
           <div class="tpl-preview tpl-classico">
             <div class="tpl-nome-bar"></div>
             <div class="tpl-linha azul"></div>
@@ -26,16 +42,6 @@
             <div class="tpl-bloco curto"></div>
           </div>
           <span>Clássico</span>
-        </div>
-        <div class="template-card" data-template="moderno" onclick="selecionarTemplate('moderno')">
-          <div class="tpl-preview tpl-moderno">
-            <div class="tpl-sidebar"></div>
-            <div class="tpl-main">
-              <div class="tpl-bloco"></div>
-              <div class="tpl-bloco curto"></div>
-            </div>
-          </div>
-          <span>Moderno</span>
         </div>
         <div class="template-card" data-template="executivo" onclick="selecionarTemplate('executivo')">
           <div class="tpl-preview tpl-executivo">
@@ -55,21 +61,15 @@
           </div>
           <span>Simples</span>
         </div>
-        <div class="template-card" data-template="antigo" onclick="selecionarTemplate('antigo')">
-          <div class="tpl-preview tpl-antigo">
-            <div class="tpl-antigo-topo">
-              <div class="tpl-antigo-nome"></div>
-              <div class="tpl-antigo-sub"></div>
-            </div>
-            <div class="tpl-antigo-corpo">
-              <div class="tpl-antigo-titulo"></div>
-              <div class="tpl-bloco cinza"></div>
-              <div class="tpl-bloco curto cinza"></div>
-              <div class="tpl-antigo-titulo"></div>
-              <div class="tpl-bloco cinza"></div>
+        <div class="template-card" data-template="moderno" onclick="selecionarTemplate('moderno')">
+          <div class="tpl-preview tpl-moderno">
+            <div class="tpl-sidebar"></div>
+            <div class="tpl-main">
+              <div class="tpl-bloco"></div>
+              <div class="tpl-bloco curto"></div>
             </div>
           </div>
-          <span>Antigo</span>
+          <span>Moderno</span>
         </div>
       </div>
     </div>
@@ -200,7 +200,7 @@
   </div>
 
   <script>
-    let TEMPLATE = 'classico';
+    let TEMPLATE = 'antigo';
 
     function selecionarTemplate(t) {
       TEMPLATE = t;
@@ -240,6 +240,7 @@
     document.getElementById("form-pdf").addEventListener("submit", async (e) => {
       e.preventDefault();
       const formData = new FormData(e.target);
+      formData.append("template", TEMPLATE);
       await enviarEExibir("/atualizar-pdf", "form", formData, "btn-gerar-pdf");
     });
 
@@ -500,28 +501,54 @@ body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
     }
 
     // ANTIGO — replica exatamente o formato do currículo tradicional brasileiro
+    // Seções-chave reconhecidas pelo parser geral (não são empresas)
+    const SECOES_CHAVE_ANTIGO = /^(DADOS|OBJETIVO|ESCOLARIDADE|FORMA[ÇC][AÃ]O|EXPERI[EÊ]NCIA|HABILIDADES|QUALIFICA[ÇC][OÕ]ES|CURSOS|CARTA|INFORMA[ÇC][OÕ]ES)/i;
+
     function renderSecoesAntigo(secoes) {
+      const secoesComBullet = /OBJETIVO|ESCOLARIDADE|QUALIFICA|CARTA/i;
       return secoes.map(s => {
+        const usaBullet = secoesComBullet.test(s.titulo);
+        // Se o título não é uma seção-chave, foi uma empresa parseada como seção
+        const ehEmpresa = !SECOES_CHAVE_ANTIGO.test(s.titulo);
+
         const linhasHtml = s.linhas.map(l => {
           if (!l) return `<div style="height:4px"></div>`;
-          // Linha com data (período) — mantém como está
-          if (/\d{2}\/\d{4}/.test(l)) {
+
+          // Linha com período de experiência: "Cargo  MM/AAAA – MM/AAAA"
+          const periodoMatch = l.match(/(\d{2}\/\d{4}\s*[–\-]\s*\d{2}\/\d{4}.*)$/);
+          if (periodoMatch) {
+            const periodo = periodoMatch[1].trim();
+            const cargo = l.substring(0, l.lastIndexOf(periodoMatch[1])).trim();
+            if (cargo) {
+              return `<div class="linha cargo-data"><span>${esc(cargo)}</span><span>${esc(periodo)}</span></div>`;
+            }
             return `<div class="linha">${esc(l)}</div>`;
           }
-          // Linha em MAIÚSCULAS = nome de empresa — negrito
+
+          // Linha em MAIÚSCULAS dentro de seção = nome de sub-empresa
           if (l === l.toUpperCase() && l.trim().length > 3 && /[A-Z]/.test(l)) {
             return `<div class="linha empresa">${esc(l)}</div>`;
           }
-          // Linha com traço no início → substitui por ❖
-          if (/^\s*[-–•]/.test(l)) {
-            return `<div class="linha bullet">❖ ${esc(l.replace(/^\s*[-–•]\s*/, ''))}</div>`;
+
+          // Seções com bullet
+          if (usaBullet && /^\s*[-–•❖]/.test(l)) {
+            return `<div class="linha bullet">❖ ${esc(l.replace(/^\s*[-–•❖]\s*/, ''))}</div>`;
           }
-          // Linha curta sem traço (objetivo, escolaridade, qualificação) → ❖
-          if (l.trim().length < 80 && !/^\s*(Período|periodo|De:|de:)/i.test(l)) {
+          if (usaBullet) {
             return `<div class="linha bullet">❖ ${esc(l)}</div>`;
           }
+
           return `<div class="linha">${esc(l)}</div>`;
         }).join("");
+
+        // Empresa foi parseada como seção → renderiza como linha negrita sem fundo cinza
+        if (ehEmpresa) {
+          return `<div class="secao-empresa">
+            <div class="empresa">${esc(s.titulo)}</div>
+            ${linhasHtml}
+          </div>`;
+        }
+
         return `<div class="secao">
           <div class="sec-titulo">${esc(s.titulo)}</div>
           ${linhasHtml}
@@ -533,24 +560,28 @@ body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
       return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(nome)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Courier New',Courier,monospace;font-size:10.5pt;color:#000;padding:15mm 20mm}
-.nome{text-align:center;font-size:15pt;font-weight:bold;text-transform:uppercase;letter-spacing:4px;margin-bottom:8px}
-.linha-decorativa{display:block;text-align:center;margin-bottom:16px;font-size:10pt;color:#555}
-.secao{margin-bottom:14px}
-.sec-titulo{font-size:10.5pt;font-weight:bold;font-style:italic;text-transform:uppercase;
-  background:#d8d8d8;padding:2px 6px;margin-bottom:7px;display:block}
-.linha{margin-bottom:2px;line-height:1.55}
-.empresa{font-weight:bold;margin-top:6px}
-.bullet{padding-left:8px}
+body{font-family:'Courier New',Courier,monospace;font-size:10.5pt;color:#000;padding:8mm 16mm}
+.nome{text-align:center;font-size:15pt;font-weight:bold;text-transform:uppercase;letter-spacing:4px;margin-bottom:4px}
+.linha-decorativa{display:block;text-align:center;margin-bottom:12px;font-size:10pt;color:#333}
+.secao{margin-bottom:10px}
+.sec-titulo{
+  font-size:10.5pt;font-weight:bold;font-style:italic;text-transform:uppercase;
+  background:#d0d0d0;padding:2px 8px;margin-bottom:5px;display:block;
+}
+.linha{margin-bottom:1px;line-height:1.45}
+.empresa{font-weight:bold;margin-top:6px;display:block}
+.bullet{padding-left:4px;display:block}
+.cargo-data{display:flex;justify-content:space-between;margin-bottom:1px;line-height:1.45}
+.secao-empresa{margin-bottom:4px;padding-left:0}
 @page{margin:0}
 @media print{
-  body{padding:10mm 16mm}
-  *{color:#000!important;background:transparent!important}
-  .sec-titulo{background:#d8d8d8!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{padding:8mm 14mm}
+  *{color:#000!important}
+  .sec-titulo{background:#d0d0d0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style></head><body>
 <div class="nome">${esc(nome)}</div>
-<span class="linha-decorativa">&#8592;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#9135;&#8594;</span>
+<span class="linha-decorativa">&#8592;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#9552;&#8594;</span>
 ${renderSecoesAntigo(secoes)}
 </body></html>`;
     }

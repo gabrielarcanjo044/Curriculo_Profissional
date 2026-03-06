@@ -14,14 +14,49 @@ app.use(express.static("public"));
 
 // ─── Rota: Gerar currículo a partir do formulário ───────────────────────────
 app.post("/gerar-curriculo", async (req, res) => {
-  const { nome, telefone, email, cidade, whatsapp, linkedin, objetivo, escolaridade, experiencias, habilidades, cursos } = req.body;
+  const { nome, telefone, email, cidade, whatsapp, linkedin, objetivo, escolaridade, experiencias, habilidades, cursos, template } = req.body;
 
   const contatoExtra = [
     whatsapp ? `- WhatsApp: ${whatsapp}` : "",
     linkedin ? `- LinkedIn: ${linkedin}` : "",
   ].filter(Boolean).join("\n");
 
-  const prompt = `Você é um especialista em redação de currículos profissionais brasileiros. Crie um currículo completo e bem redigido com os dados abaixo.
+  let prompt;
+
+  if (template === "antigo") {
+    prompt = `Você é um especialista em redação de currículos profissionais brasileiros no estilo tradicional dos anos 2000.
+Crie um currículo no formato EXATO abaixo, usando os dados fornecidos.
+
+DADOS DO CLIENTE:
+- Nome: ${nome}
+- Telefone: ${telefone || "Não informado"}
+- E-mail: ${email || "Não informado"}
+- Cidade: ${cidade || "Não informada"}
+${contatoExtra}
+- Objetivo profissional: ${objetivo}
+- Escolaridade: ${escolaridade}
+- Experiências profissionais: ${experiencias}
+- Habilidades: ${habilidades || "Não informadas"}
+- Cursos e certificados: ${cursos || "Não informados"}
+
+REGRAS DE FORMATAÇÃO — SIGA RIGOROSAMENTE:
+- Primeira linha: apenas o NOME EM MAIÚSCULAS
+- Títulos de seção em MAIÚSCULO sozinhos na linha, sem símbolo algum
+- Seções obrigatórias na ordem: DADOS PESSOAIS, OBJETIVO, ESCOLARIDADE, EXPERIÊNCIA PROFISSIONAL, QUALIFICAÇÕES${cursos ? ", CURSOS E CERTIFICADOS" : ""}, CARTA DE APRESENTAÇÃO
+- DADOS PESSOAIS: informações em linhas simples (sem hífen)
+- OBJETIVO: uma linha com "- " no início
+- ESCOLARIDADE: uma linha com "- " no início
+- EXPERIÊNCIA PROFISSIONAL:
+  * Nome de cada empresa em MAIÚSCULAS sozinho na linha
+  * Na linha SEGUINTE: cargo e período separados por espaços: "Cargo  MM/AAAA - MM/AAAA"
+  * Se não souber o período exato, estime ou omita
+- QUALIFICAÇÕES: lista de itens com "- " no início
+- CARTA DE APRESENTAÇÃO: parágrafo de apresentação com "- " no início
+- PROIBIDO: markdown, **, ##, ___, ou qualquer símbolo especial
+- Separe seções com UMA linha em branco
+- OBRIGATÓRIO: português brasileiro com TODOS os acentos`;
+  } else {
+    prompt = `Você é um especialista em redação de currículos profissionais brasileiros. Crie um currículo completo e bem redigido com os dados abaixo.
 
 DADOS DO CLIENTE:
 - Nome: ${nome}
@@ -46,6 +81,7 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - Se a escolaridade for baixa, valorize as experiências práticas
 - OBRIGATÓRIO: use português brasileiro correto com TODOS os acentos (ção, ões, ção, ã, é, ê, á, â, ó, ú, ç, etc.)
 - NUNCA escreva palavras sem acento: manutenção (não manutencao), realização (não realizacao), serviços (não servicos), endereço (não endereco), período (não periodo), etc.`;
+  }
 
   await gerarComStream(prompt, res);
 });
@@ -57,9 +93,33 @@ app.post("/atualizar-pdf", upload.single("pdf"), async (req, res) => {
   }
 
   const novaInfo = req.body.novaInfo || "";
+  const template = req.body.template || "classico";
   const pdfBase64 = req.file.buffer.toString("base64");
 
-  const instrucoes = `Você é um especialista em redação de currículos profissionais brasileiros.
+  let instrucoes;
+
+  if (template === "antigo") {
+    instrucoes = `Você é um especialista em currículos profissionais brasileiros no estilo tradicional.
+
+Leia o PDF acima e reescreva o currículo MANTENDO FIELMENTE o mesmo estilo e formato do documento original.
+${novaInfo ? `\nADICIONE TAMBÉM as seguintes informações novas:\n${novaInfo}` : ""}
+
+REGRAS DE FORMATAÇÃO — SIGA RIGOROSAMENTE:
+- Primeira linha: apenas o NOME EM MAIÚSCULAS
+- Títulos de seção em MAIÚSCULO sozinhos na linha
+- Seções na ordem do original: DADOS PESSOAIS, OBJETIVO, ESCOLARIDADE, EXPERIÊNCIA PROFISSIONAL, QUALIFICAÇÕES, CARTA DE APRESENTAÇÃO (e outras que existirem)
+- DADOS PESSOAIS: informações em linhas simples
+- OBJETIVO, ESCOLARIDADE: uma linha com "- " no início
+- EXPERIÊNCIA PROFISSIONAL:
+  * Nome de cada empresa em MAIÚSCULAS sozinho na linha
+  * Linha seguinte: cargo e período: "Cargo  MM/AAAA - MM/AAAA"
+- QUALIFICAÇÕES e CARTA DE APRESENTAÇÃO: itens com "- " no início
+- PROIBIDO: markdown, **, ##, ___ ou qualquer símbolo especial
+- Separe seções com UMA linha em branco
+- Mantenha TODOS os dados originais sem omitir nada
+- OBRIGATÓRIO: português brasileiro com TODOS os acentos`;
+  } else {
+    instrucoes = `Você é um especialista em redação de currículos profissionais brasileiros.
 
 Leia o PDF acima (currículo antigo) e reescreva-o de forma mais profissional, organizada e moderna.
 ${novaInfo ? `\nADICIONE TAMBÉM as seguintes informações novas informadas pelo cliente:\n${novaInfo}` : ""}
@@ -74,6 +134,7 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - Mantenha todos os dados originais
 - Melhore as descrições das experiências para soarem mais profissionais
 - OBRIGATÓRIO: use português brasileiro correto com TODOS os acentos`;
+  }
 
   try {
     const stream = client.messages.stream({
