@@ -122,51 +122,73 @@ app.post("/atualizar-pdf", upload.single("pdf"), async (req, res) => {
   let instrucoes;
 
   if (template === "antigo") {
-    instrucoes = `Você é um especialista em currículos profissionais brasileiros no estilo tradicional dos anos 2000.
-
-Leia o PDF acima e transcreva o currículo EXATAMENTE neste formato abaixo. Não adicione descrições, não melhore, não reescreva — apenas organize no formato correto.
+    instrucoes = `Leia o PDF acima e transcreva o currículo no formato abaixo. Siga o modelo EXATAMENTE — sem inventar, sem melhorar, sem adicionar nada.
 ${novaInfo ? `\nADICIONE TAMBÉM as seguintes informações novas:\n${novaInfo}` : ""}
 
-FORMATO OBRIGATÓRIO — COPIE ESTE MODELO:
+VEJA O EXEMPLO DE COMO DEVE FICAR A SEÇÃO DE EXPERIÊNCIA:
+
+❌ ERRADO (NUNCA FAÇA ASSIM):
+Perini e Oliveira Transportes e Serviços
+Cargo: Motorista
+Período: Junho de 2023 a Novembro de 2024
+- Condução de veículos para operações de transporte.
+
+✅ CORRETO (SEMPRE FAÇA ASSIM):
+PERINI E OLIVEIRA TRANSPORTES E SERVIÇOS
+Motorista  06/2023 - 11/2024
+
+VEJA O EXEMPLO DE COMO DEVE FICAR A ESCOLARIDADE:
+
+❌ ERRADO: FORMAÇÃO ACADÊMICA
+✅ CORRETO: ESCOLARIDADE
+
+VEJA O EXEMPLO DE COMO DEVE FICAR OS DADOS PESSOAIS:
+
+❌ ERRADO:
+- Nacionalidade: Brasileiro
+- Estado civil: Casado
+
+✅ CORRETO:
+Brasileiro, Casado, 04/10/1973  HABILITAÇÃO AE
+Rua do Dia, 280
+Bairro Orquídea - Ibiúna - SP
+Telefone: (11) 9.7224-1073
+Não Fumante
+
+FORMATO COMPLETO OBRIGATÓRIO:
 
 NOME COMPLETO EM MAIÚSCULAS
 
 DADOS PESSOAIS
 Nacionalidade, Estado civil, Data de nascimento  HABILITAÇÃO XX
-Endereço completo
+Endereço
 Telefone: (XX) XXXXX-XXXX
-Não Fumante (ou Fumante)
+Não Fumante
 
 OBJETIVO
-- Cargo desejado (informações relevantes)
+- Cargo desejado
 
 ESCOLARIDADE
 - Nível de ensino
 
 EXPERIÊNCIA PROFISSIONAL
-NOME DA EMPRESA EM MAIÚSCULAS EXATAMENTE COMO ESTÁ NO PDF
-Cargo  MM/AAAA - MM/AAAA
-
-OUTRA EMPRESA EM MAIÚSCULAS
+NOME DA EMPRESA EM MAIÚSCULAS
 Cargo  MM/AAAA - MM/AAAA
 
 QUALIFICAÇÕES
-- Item 1
-- Item 2
+- Item
 
 CARTA DE APRESENTAÇÃO
-- Texto de apresentação
+- Texto
 
-REGRAS ABSOLUTAS:
-1. Nomes de empresa SEMPRE em MAIÚSCULAS completas (ex: PERINI E OLIVEIRA TRANSPORTES E SERVIÇOS)
-2. Cargo e período SEMPRE na mesma linha separados por espaços (ex: Motorista Carreteiro  06/2012 - 11/2013)
-3. PROIBIDO escrever "Cargo:", "Função:", "Período:", "De:", "Empresa:" — esses prefixos são VETADOS
-4. PROIBIDO adicionar descrições de atividades nas experiências
-5. PROIBIDO usar FORMAÇÃO ACADÊMICA — use sempre ESCOLARIDADE
-6. PROIBIDO: markdown, **, ##, ___ ou qualquer símbolo especial
-7. Separe cada empresa com UMA linha em branco
-8. Mantenha TODOS os dados originais
-9. OBRIGATÓRIO: português brasileiro com TODOS os acentos`;
+REGRAS:
+- Empresa: SEMPRE EM MAIÚSCULAS na linha própria
+- Cargo e período: SEMPRE na mesma linha "Cargo  MM/AAAA - MM/AAAA"
+- ZERO descrições de atividades
+- ZERO prefixos "Cargo:", "Período:", "Função:"
+- ZERO seção "FORMAÇÃO ACADÊMICA" — só "ESCOLARIDADE"
+- Separe empresas com uma linha em branco
+- Mantenha TODOS os dados originais do PDF`;
   } else {
     instrucoes = `Você é um especialista em redação de currículos profissionais brasileiros.
 
