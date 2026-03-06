@@ -24,8 +24,8 @@ app.post("/gerar-curriculo", async (req, res) => {
   let prompt;
 
   if (template === "antigo") {
-    prompt = `Você é um especialista em redação de currículos profissionais brasileiros no estilo tradicional dos anos 2000.
-Crie um currículo no formato EXATO abaixo, usando os dados fornecidos.
+    prompt = `Você é um especialista em currículos profissionais brasileiros no estilo tradicional dos anos 2000.
+Crie um currículo EXATAMENTE neste formato, usando os dados fornecidos.
 
 DADOS DO CLIENTE:
 - Nome: ${nome}
@@ -39,22 +39,45 @@ ${contatoExtra}
 - Habilidades: ${habilidades || "Não informadas"}
 - Cursos e certificados: ${cursos || "Não informados"}
 
-REGRAS DE FORMATAÇÃO — SIGA RIGOROSAMENTE:
-- Primeira linha: apenas o NOME EM MAIÚSCULAS
-- Títulos de seção em MAIÚSCULO sozinhos na linha, sem símbolo algum
-- Seções obrigatórias na ordem: DADOS PESSOAIS, OBJETIVO, ESCOLARIDADE, EXPERIÊNCIA PROFISSIONAL, QUALIFICAÇÕES${cursos ? ", CURSOS E CERTIFICADOS" : ""}, CARTA DE APRESENTAÇÃO
-- DADOS PESSOAIS: informações em linhas simples (sem hífen)
-- OBJETIVO: uma linha com "- " no início
-- ESCOLARIDADE: uma linha com "- " no início
-- EXPERIÊNCIA PROFISSIONAL:
-  * Nome de cada empresa em MAIÚSCULAS sozinho na linha
-  * Na linha SEGUINTE: cargo e período separados por espaços: "Cargo  MM/AAAA - MM/AAAA"
-  * Se não souber o período exato, estime ou omita
-- QUALIFICAÇÕES: lista de itens com "- " no início
-- CARTA DE APRESENTAÇÃO: parágrafo de apresentação com "- " no início
-- PROIBIDO: markdown, **, ##, ___, ou qualquer símbolo especial
-- Separe seções com UMA linha em branco
-- OBRIGATÓRIO: português brasileiro com TODOS os acentos`;
+FORMATO OBRIGATÓRIO — SIGA ESTE MODELO EXATO:
+
+NOME COMPLETO EM MAIÚSCULAS
+
+DADOS PESSOAIS
+Brasileiro(a), Estado civil, Data de nascimento  HABILITAÇÃO XX (se houver)
+Endereço
+Telefone: (XX) XXXXX-XXXX
+Não Fumante
+
+OBJETIVO
+- Cargo desejado
+
+ESCOLARIDADE
+- Nível de ensino
+
+EXPERIÊNCIA PROFISSIONAL
+NOME DA EMPRESA EM MAIÚSCULAS
+Cargo  MM/AAAA - MM/AAAA
+
+OUTRA EMPRESA EM MAIÚSCULAS
+Cargo  MM/AAAA - MM/AAAA
+
+QUALIFICAÇÕES
+- Habilidade 1
+- Habilidade 2
+
+CARTA DE APRESENTAÇÃO
+- Breve apresentação pessoal e profissional
+
+REGRAS ABSOLUTAS:
+1. Nomes de empresa SEMPRE em MAIÚSCULAS completas
+2. Cargo e período SEMPRE na mesma linha: "Cargo  MM/AAAA - MM/AAAA"
+3. PROIBIDO escrever "Cargo:", "Função:", "Período:" como prefixos
+4. PROIBIDO adicionar descrições de atividades nas experiências
+5. PROIBIDO usar FORMAÇÃO ACADÊMICA — use ESCOLARIDADE
+6. PROIBIDO: markdown, **, ##, ___ ou qualquer símbolo especial
+7. Separe cada empresa com uma linha em branco
+8. OBRIGATÓRIO: português brasileiro com TODOS os acentos`;
   } else {
     prompt = `Você é um especialista em redação de currículos profissionais brasileiros. Crie um currículo completo e bem redigido com os dados abaixo.
 
@@ -99,25 +122,51 @@ app.post("/atualizar-pdf", upload.single("pdf"), async (req, res) => {
   let instrucoes;
 
   if (template === "antigo") {
-    instrucoes = `Você é um especialista em currículos profissionais brasileiros no estilo tradicional.
+    instrucoes = `Você é um especialista em currículos profissionais brasileiros no estilo tradicional dos anos 2000.
 
-Leia o PDF acima e reescreva o currículo MANTENDO FIELMENTE o mesmo estilo e formato do documento original.
+Leia o PDF acima e transcreva o currículo EXATAMENTE neste formato abaixo. Não adicione descrições, não melhore, não reescreva — apenas organize no formato correto.
 ${novaInfo ? `\nADICIONE TAMBÉM as seguintes informações novas:\n${novaInfo}` : ""}
 
-REGRAS DE FORMATAÇÃO — SIGA RIGOROSAMENTE:
-- Primeira linha: apenas o NOME EM MAIÚSCULAS
-- Títulos de seção em MAIÚSCULO sozinhos na linha
-- Seções na ordem do original: DADOS PESSOAIS, OBJETIVO, ESCOLARIDADE, EXPERIÊNCIA PROFISSIONAL, QUALIFICAÇÕES, CARTA DE APRESENTAÇÃO (e outras que existirem)
-- DADOS PESSOAIS: informações em linhas simples
-- OBJETIVO, ESCOLARIDADE: uma linha com "- " no início
-- EXPERIÊNCIA PROFISSIONAL:
-  * Nome de cada empresa em MAIÚSCULAS sozinho na linha
-  * Linha seguinte: cargo e período: "Cargo  MM/AAAA - MM/AAAA"
-- QUALIFICAÇÕES e CARTA DE APRESENTAÇÃO: itens com "- " no início
-- PROIBIDO: markdown, **, ##, ___ ou qualquer símbolo especial
-- Separe seções com UMA linha em branco
-- Mantenha TODOS os dados originais sem omitir nada
-- OBRIGATÓRIO: português brasileiro com TODOS os acentos`;
+FORMATO OBRIGATÓRIO — COPIE ESTE MODELO:
+
+NOME COMPLETO EM MAIÚSCULAS
+
+DADOS PESSOAIS
+Nacionalidade, Estado civil, Data de nascimento  HABILITAÇÃO XX
+Endereço completo
+Telefone: (XX) XXXXX-XXXX
+Não Fumante (ou Fumante)
+
+OBJETIVO
+- Cargo desejado (informações relevantes)
+
+ESCOLARIDADE
+- Nível de ensino
+
+EXPERIÊNCIA PROFISSIONAL
+NOME DA EMPRESA EM MAIÚSCULAS EXATAMENTE COMO ESTÁ NO PDF
+Cargo  MM/AAAA - MM/AAAA
+
+OUTRA EMPRESA EM MAIÚSCULAS
+Cargo  MM/AAAA - MM/AAAA
+
+QUALIFICAÇÕES
+- Item 1
+- Item 2
+
+CARTA DE APRESENTAÇÃO
+- Texto de apresentação
+
+REGRAS ABSOLUTAS:
+1. Nomes de empresa SEMPRE em MAIÚSCULAS completas (ex: PERINI E OLIVEIRA TRANSPORTES E SERVIÇOS)
+2. Cargo e período SEMPRE na mesma linha separados por espaços (ex: Motorista Carreteiro  06/2012 - 11/2013)
+3. PROIBIDO escrever "Cargo:", "Função:", "Período:", "De:", "Empresa:" — esses prefixos são VETADOS
+4. PROIBIDO adicionar descrições de atividades nas experiências
+5. PROIBIDO usar FORMAÇÃO ACADÊMICA — use sempre ESCOLARIDADE
+6. PROIBIDO: markdown, **, ##, ___ ou qualquer símbolo especial
+7. Separe cada empresa com UMA linha em branco
+8. Mantenha TODOS os dados originais
+9. OBRIGATÓRIO: português brasileiro com TODOS os acentos`;
   } else {
     instrucoes = `Você é um especialista em redação de currículos profissionais brasileiros.
 
