@@ -3,7 +3,7 @@ const express = require("express");
 const multer = require("multer");
 const pdfParse = require("pdf-parse");
 const Anthropic = require("@anthropic-ai/sdk").default;
-const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } = require("docx");
+const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ShadingType, TabStopType, TabStopPosition } = require("docx");
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -340,66 +340,132 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
   }
 });
 
-// ─── Rota: Salvar como Word (.docx) ──────────────────────────────────────────
-app.post("/salvar-word", async (req, res) => {
-  const { texto, nome } = req.body;
-  if (!texto) return res.status(400).json({ erro: "Texto vazio." });
+// ─── Word: helpers ────────────────────────────────────────────────────────────
+const isSecaoAntigoWord = (t) =>
+  /^(DADOS PESSOAIS|OBJETIVO|ESCOLARIDADE|EXPERI[ÊE]NCIA PROFISSIONAL|QUALIFICA[ÇC][ÕO]ES|CARTA DE APRESENTA[ÇC][ÃA]O|HABILIDADES|CURSOS)/i.test(t);
 
+function gerarWordAntigo(texto, nome) {
+  const FONT = "Courier New";
+  const SZ = 20; // 10pt em half-points
   const linhas = texto.split("\n");
-  const ehMaiusculo = (t) => t && t === t.toUpperCase() && t.length > 2 && !/^\d/.test(t);
 
-  // Primeira linha em maiúsculo = nome do candidato
-  const primeiraLinhaMaiuscula = linhas.find(l => ehMaiusculo(l.trim()));
-  const nomeDoc = primeiraLinhaMaiuscula?.trim() || nome || "";
-  let primeiraCapPulada = false;
+  // Nome = primeira linha não vazia
+  const nomeDoc = linhas.find(l => l.trim())?.trim() || nome || "";
 
-  const paragrafos = linhas.map((linha) => {
-    const trimmed = linha.trim();
+  const paragrafos = [];
+  let primeiroNomePulado = false;
 
-    // Pula a PRIMEIRA linha em maiúsculo (nome já está no cabeçalho)
-    if (!primeiraCapPulada && ehMaiusculo(trimmed)) {
-      primeiraCapPulada = true;
-      return null;
-    }
+  for (const linha of linhas) {
+    const t = linha.trim();
 
-    // Linha em MAIÚSCULO = título de seção
-    if (ehMaiusculo(trimmed)) {
-      return new Paragraph({
-        text: trimmed,
-        heading: HeadingLevel.HEADING_2,
-        spacing: { before: 240, after: 80 },
-        border: { bottom: { color: "00b4d8", size: 6, style: "single" } },
-      });
-    }
+    // Pula a primeira linha (nome — vai pro cabeçalho)
+    if (!primeiroNomePulado && t === nomeDoc) { primeiroNomePulado = true; continue; }
 
     // Linha vazia
-    if (!trimmed) {
-      return new Paragraph({ text: "", spacing: { after: 60 } });
+    if (!t) { paragrafos.push(new Paragraph({ text: "", spacing: { after: 40 } })); continue; }
+
+    // Seção principal (fundo cinza, itálico negrito)
+    if (isSecaoAntigoWord(t)) {
+      paragrafos.push(new Paragraph({
+        children: [new TextRun({ text: t, bold: true, italics: true, font: FONT, size: SZ, color: "000000" })],
+        shading: { type: ShadingType.SOLID, color: "d0d0d0", fill: "d0d0d0" },
+        spacing: { before: 160, after: 60 },
+      }));
+      continue;
     }
 
-    // Linha normal
-    return new Paragraph({
-      children: [new TextRun({ text: trimmed, size: 22 })],
-      spacing: { after: 60 },
-    });
-  }).filter(Boolean);
+    // Empresa (ALL CAPS, não seção)
+    const ehMaiusc = t === t.toUpperCase() && t.length > 2 && !/^\d/.test(t) && !/^[❖•\-]/.test(t);
+    if (ehMaiusc) {
+      paragrafos.push(new Paragraph({
+        children: [new TextRun({ text: t, bold: true, font: FONT, size: SZ, color: "000000" })],
+        spacing: { before: 100, after: 20 },
+      }));
+      continue;
+    }
+
+    // Linha cargo + data (contém padrão MM/AAAA - MM/AAAA)
+    const mCargoData = t.match(/^(.+?)\s{2,}(\d{2}\/\d{4}\s*[-–]\s*\d{2}\/\d{4}.*)$/);
+    if (mCargoData) {
+      paragrafos.push(new Paragraph({
+        children: [
+          new TextRun({ text: mCargoData[1].trim(), font: FONT, size: SZ }),
+          new TextRun({ text: "\t" }),
+          new TextRun({ text: mCargoData[2].trim(), font: FONT, size: SZ }),
+        ],
+        tabStops: [{ type: TabStopType.RIGHT, position: 9000 }],
+        spacing: { after: 40 },
+      }));
+      continue;
+    }
+
+    // Bullet (❖ ou -)
+    paragrafos.push(new Paragraph({
+      children: [new TextRun({ text: t, font: FONT, size: SZ, color: "000000" })],
+      spacing: { after: 40 },
+    }));
+  }
 
   const docParagrafos = [
+    // Nome centralizado
     new Paragraph({
-      children: [new TextRun({ text: nomeDoc, bold: true, size: 32 })],
+      children: [new TextRun({ text: nomeDoc, bold: true, font: FONT, size: 28, color: "000000" })],
       alignment: AlignmentType.CENTER,
-      spacing: { after: 200 },
+      spacing: { after: 60 },
+    }),
+    // Linha decorativa
+    new Paragraph({
+      children: [new TextRun({ text: "←" + "═".repeat(58) + "→", font: FONT, size: 16, color: "333333" })],
+      alignment: AlignmentType.CENTER,
+      spacing: { after: 160 },
     }),
     ...paragrafos,
   ];
 
-  const doc = new Document({
-    sections: [{ properties: {}, children: docParagrafos }],
-  });
+  return new Document({ sections: [{ properties: {}, children: docParagrafos }] });
+}
+
+// ─── Rota: Salvar como Word (.docx) ──────────────────────────────────────────
+app.post("/salvar-word", async (req, res) => {
+  const { texto, nome, template } = req.body;
+  if (!texto) return res.status(400).json({ erro: "Texto vazio." });
+
+  const linhas = texto.split("\n");
+  const ehMaiusculo = (t) => t && t === t.toUpperCase() && t.length > 2 && !/^\d/.test(t);
+  const primeiraLinhaMaiuscula = linhas.find(l => ehMaiusculo(l.trim()));
+  const nomeDoc = primeiraLinhaMaiuscula?.trim() || nome || "";
+
+  let doc;
+
+  if (template === "antigo") {
+    doc = gerarWordAntigo(texto, nomeDoc);
+  } else {
+    let primeiraCapPulada = false;
+    const paragrafos = linhas.map((linha) => {
+      const trimmed = linha.trim();
+      if (!primeiraCapPulada && ehMaiusculo(trimmed)) { primeiraCapPulada = true; return null; }
+      if (ehMaiusculo(trimmed)) {
+        return new Paragraph({
+          text: trimmed, heading: HeadingLevel.HEADING_2,
+          spacing: { before: 240, after: 80 },
+          border: { bottom: { color: "00b4d8", size: 6, style: "single" } },
+        });
+      }
+      if (!trimmed) return new Paragraph({ text: "", spacing: { after: 60 } });
+      return new Paragraph({ children: [new TextRun({ text: trimmed, size: 22 })], spacing: { after: 60 } });
+    }).filter(Boolean);
+
+    doc = new Document({ sections: [{ properties: {}, children: [
+      new Paragraph({
+        children: [new TextRun({ text: nomeDoc, bold: true, size: 32 })],
+        alignment: AlignmentType.CENTER, spacing: { after: 200 },
+      }),
+      ...paragrafos,
+    ]}]});
+  }
 
   const buffer = await Packer.toBuffer(doc);
   const nomeArquivo = `Curriculo_${nomeDoc.replace(/\s+/g, "_")}.docx`;
-
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
   res.setHeader("Content-Disposition", `attachment; filename="${nomeArquivo}"`);
   res.send(buffer);

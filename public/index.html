@@ -302,7 +302,7 @@
           : (document.querySelector("input[name='nome']")?.value || "");
         const resposta = await fetch("/salvar-word", {
           method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ texto, nome })
+          body: JSON.stringify({ texto, nome, template: TEMPLATE })
         });
         if (!resposta.ok) { alert("Erro ao gerar Word."); return; }
         const blob = await resposta.blob();
