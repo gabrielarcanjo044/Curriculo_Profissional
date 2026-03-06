@@ -12,6 +12,99 @@ const upload = multer({ storage: multer.memoryStorage() });
 app.use(express.json());
 app.use(express.static("public"));
 
+// ─── Pós-processamento para template Antigo ───────────────────────────────────
+const MESES_PT = {
+  'janeiro':'01','fevereiro':'02','março':'03','abril':'04',
+  'maio':'05','junho':'06','julho':'07','agosto':'08',
+  'setembro':'09','outubro':'10','novembro':'11','dezembro':'12'
+};
+
+function normalizarPeriodo(s) {
+  s = s.replace(
+    /(\w+)\s+de\s+(\d{4})\s+(?:a|até|ao)\s+(\w+)\s+de\s+(\d{4})/gi,
+    (_, m1, y1, m2, y2) =>
+      `${MESES_PT[m1.toLowerCase()]||m1}/${y1} - ${MESES_PT[m2.toLowerCase()]||m2}/${y2}`
+  );
+  s = s.replace(/(\d{2}\/\d{4})\s+(?:a|até|ao)\s+(\d{2}\/\d{4})/g, '$1 - $2');
+  return s.trim();
+}
+
+function postProcessarAntigo(texto) {
+  texto = texto
+    .replace(/FORMA[ÇC][AÃ]O ACAD[EÊ]MICA/gi, 'ESCOLARIDADE')
+    .replace(/^FORMA[ÇC][AÃ]O$/gim, 'ESCOLARIDADE');
+
+  const isSecao = (t) =>
+    /^(DADOS PESSOAIS|OBJETIVO|ESCOLARIDADE|EXPERI[ÊE]NCIA PROFISSIONAL|QUALIFICA[ÇC][ÕO]ES|CARTA DE APRESENTA[ÇC][ÃA]O|HABILIDADES|CURSOS)/i.test(t);
+
+  const linhas = texto.split('\n');
+  const saida = [];
+  let secao = '';
+  let prevVazia = true;
+  let i = 0;
+
+  while (i < linhas.length) {
+    const raw = linhas[i]; i++;
+    const t = raw.trim();
+
+    if (!t) { saida.push(''); prevVazia = true; continue; }
+
+    if (isSecao(t)) {
+      secao = t.toUpperCase()
+        .replace('EXPERIENCIA PROFISSIONAL', 'EXPERIÊNCIA PROFISSIONAL')
+        .replace('QUALIFICACOES', 'QUALIFICAÇÕES')
+        .replace('CARTA DE APRESENTACAO', 'CARTA DE APRESENTAÇÃO');
+      saida.push(secao);
+      prevVazia = true;
+      continue;
+    }
+
+    if (/EXPERI[ÊE]NCIA/i.test(secao)) {
+      if (/^[-–•]\s/.test(t)) { prevVazia = false; continue; }
+
+      if (/^(cargo|fun[çc][ãa]o)\s*:/i.test(t)) {
+        const cargo = t.replace(/^(cargo|fun[çc][ãa]o)\s*:\s*/i, '').trim();
+        let j = i;
+        while (j < linhas.length && !linhas[j].trim()) j++;
+        if (j < linhas.length && /^per[íi]odo\s*:/i.test(linhas[j].trim())) {
+          const per = normalizarPeriodo(linhas[j].trim().replace(/^per[íi]odo\s*:\s*/i, ''));
+          saida.push(`${cargo}  ${per}`);
+          i = j + 1;
+        } else {
+          saida.push(cargo);
+        }
+        prevVazia = false; continue;
+      }
+
+      if (/^per[íi]odo\s*:/i.test(t)) { prevVazia = false; continue; }
+
+      if (/\d{2}\/\d{4}/.test(t)) {
+        saida.push(normalizarPeriodo(t)); prevVazia = false; continue;
+      }
+
+      if (prevVazia) { saida.push(t.toUpperCase()); prevVazia = false; continue; }
+
+      saida.push(t); prevVazia = false; continue;
+    }
+
+    if (/DADOS PESSOAIS/i.test(secao)) {
+      saida.push(t.replace(/^-\s+/, '')); prevVazia = false; continue;
+    }
+
+    saida.push(raw); prevVazia = false;
+  }
+  return saida.join('\n');
+}
+
+async function coletarResposta(messages) {
+  const stream = client.messages.stream({ model: "claude-opus-4-6", max_tokens: 2048, messages });
+  let texto = '';
+  for await (const ev of stream)
+    if (ev.type === "content_block_delta" && ev.delta.type === "text_delta")
+      texto += ev.delta.text;
+  return texto;
+}
+
 // ─── Rota: Gerar currículo a partir do formulário ───────────────────────────
 app.post("/gerar-curriculo", async (req, res) => {
   const { nome, telefone, email, cidade, whatsapp, linkedin, objetivo, escolaridade, experiencias, habilidades, cursos, template } = req.body;
@@ -106,6 +199,17 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - NUNCA escreva palavras sem acento: manutenção (não manutencao), realização (não realizacao), serviços (não servicos), endereço (não endereco), período (não periodo), etc.`;
   }
 
+  if (template === "antigo") {
+    try {
+      const raw = await coletarResposta([{ role: "user", content: prompt }]);
+      const texto = postProcessarAntigo(raw);
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+      res.write(texto); res.end();
+    } catch (e) {
+      if (!res.headersSent) res.status(500).json({ erro: e.message });
+    }
+    return;
+  }
   await gerarComStream(prompt, res);
 });
 
@@ -207,36 +311,32 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 - OBRIGATÓRIO: use português brasileiro correto com TODOS os acentos`;
   }
 
-  try {
-    const stream = client.messages.stream({
-      model: "claude-opus-4-6",
-      max_tokens: 2048,
-      messages: [{
-        role: "user",
-        content: [
-          {
-            type: "document",
-            source: { type: "base64", media_type: "application/pdf", data: pdfBase64 }
-          },
-          { type: "text", text: instrucoes }
-        ]
-      }]
-    });
+  const messages = [{
+    role: "user",
+    content: [
+      { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBase64 } },
+      { type: "text", text: instrucoes }
+    ]
+  }];
 
+  try {
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Transfer-Encoding", "chunked");
 
-    for await (const event of stream) {
-      if (event.type === "content_block_delta" && event.delta.type === "text_delta") {
-        res.write(event.delta.text);
-      }
+    if (template === "antigo") {
+      const raw = await coletarResposta(messages);
+      res.write(postProcessarAntigo(raw));
+      res.end();
+    } else {
+      const stream = client.messages.stream({ model: "claude-opus-4-6", max_tokens: 2048, messages });
+      for await (const event of stream)
+        if (event.type === "content_block_delta" && event.delta.type === "text_delta")
+          res.write(event.delta.text);
+      res.end();
     }
-    res.end();
   } catch (error) {
     console.error("Erro na API:", error.message);
-    if (!res.headersSent) {
-      res.status(500).json({ erro: "Erro ao processar PDF: " + error.message });
-    }
+    if (!res.headersSent) res.status(500).json({ erro: "Erro ao processar PDF: " + error.message });
   }
 });
 
