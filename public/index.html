@@ -3,38 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Gerador de Currículo com IA</title>
+  <title>INFORO2 Currículos — Currículo Profissional com IA</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <div class="container">
-    <header>
-      <h1>📄 Gerador de Currículo</h1>
-      <p>Preencha os dados ou envie um PDF antigo para atualizar</p>
-    </header>
+  <!-- ═══════ HERO ═══════ -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-brand">INFORO2 <span>Currículos</span></div>
+      <h1>Currículo profissional<br>pronto para enviar</h1>
+      <p class="hero-sub">Crie ou atualize seu currículo em PDF e Word<br>com visual profissional em minutos</p>
+      <div class="hero-btns">
+        <button class="btn-hero-prim" onclick="irParaApp('novo')">✨ Criar Currículo Novo</button>
+        <button class="btn-hero-sec" onclick="irParaApp('pdf')">📎 Atualizar Currículo Antigo</button>
+      </div>
+      <div class="hero-trust">
+        <span>✓ Entrega em PDF e Word</span>
+        <span>✓ Compatível com ATS</span>
+        <span>✓ Atendimento por WhatsApp</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════ PROVA SOCIAL ═══════ -->
+  <div class="prova-social">
+    <div class="ps-inner">
+      <div class="ps-item">⭐ Já geramos mais de 500 currículos</div>
+      <div class="ps-sep">|</div>
+      <div class="ps-item">💼 Entrega em PDF e Word em minutos</div>
+      <div class="ps-sep">|</div>
+      <div class="ps-item">✓ Compatível com processos de RH modernos</div>
+    </div>
+  </div>
+
+  <!-- ═══════ APP PRINCIPAL ═══════ -->
+  <div class="container" id="secao-app">
 
     <!-- Seletor de Template -->
     <div class="template-selector">
-      <p class="template-label">Escolha o estilo do currículo:</p>
+      <p class="template-label">Escolha o estilo do seu currículo:</p>
       <div class="template-cards">
-        <div class="template-card ativo" data-template="antigo" onclick="selecionarTemplate('antigo')">
-          <div class="tpl-preview tpl-antigo">
-            <div class="tpl-antigo-topo">
-              <div class="tpl-antigo-nome"></div>
-              <div class="tpl-antigo-sub"></div>
-            </div>
-            <div class="tpl-antigo-corpo">
-              <div class="tpl-antigo-titulo"></div>
-              <div class="tpl-bloco cinza"></div>
-              <div class="tpl-bloco curto cinza"></div>
-              <div class="tpl-antigo-titulo"></div>
-              <div class="tpl-bloco cinza"></div>
-            </div>
-          </div>
-          <span>Antigo</span>
-        </div>
-        <div class="template-card" data-template="classico" onclick="selecionarTemplate('classico')">
+        <div class="template-card ativo" data-template="classico" onclick="selecionarTemplate('classico')">
           <div class="tpl-preview tpl-classico">
             <div class="tpl-nome-bar"></div>
             <div class="tpl-linha azul"></div>
@@ -52,15 +62,6 @@
           </div>
           <span>Executivo</span>
         </div>
-        <div class="template-card" data-template="simples" onclick="selecionarTemplate('simples')">
-          <div class="tpl-preview tpl-simples">
-            <div class="tpl-nome-bar cinza"></div>
-            <div class="tpl-linha cinza"></div>
-            <div class="tpl-bloco cinza"></div>
-            <div class="tpl-bloco curto cinza"></div>
-          </div>
-          <span>Simples</span>
-        </div>
         <div class="template-card" data-template="moderno" onclick="selecionarTemplate('moderno')">
           <div class="tpl-preview tpl-moderno">
             <div class="tpl-sidebar"></div>
@@ -71,6 +72,25 @@
           </div>
           <span>Moderno</span>
         </div>
+        <div class="template-card" data-template="simples" onclick="selecionarTemplate('simples')">
+          <div class="tpl-preview tpl-simples">
+            <div class="tpl-nome-bar cinza"></div>
+            <div class="tpl-linha cinza"></div>
+            <div class="tpl-bloco cinza"></div>
+            <div class="tpl-bloco curto cinza"></div>
+          </div>
+          <span>Simples</span>
+        </div>
+        <div class="template-card" data-template="criativo" onclick="selecionarTemplate('criativo')">
+          <div class="tpl-preview tpl-criativo">
+            <div class="tpl-cri-nome"></div>
+            <div class="tpl-cri-bar"></div>
+            <div class="tpl-cri-sec"></div>
+            <div class="tpl-bloco"></div>
+            <div class="tpl-bloco curto"></div>
+          </div>
+          <span>Criativo</span>
+        </div>
       </div>
     </div>
 
@@ -80,90 +100,128 @@
       <button class="aba" onclick="trocarAba('pdf')">📎 Atualizar PDF</button>
     </div>
 
-    <!-- ABA 1: Formulário manual -->
+    <!-- ABA 1: Formulário em etapas -->
     <div id="aba-formulario">
+      <!-- Indicador de etapas -->
+      <div class="steps-nav">
+        <div class="step-item ativa" id="step-ind-1">
+          <div class="step-num">1</div>
+          <span class="step-lbl">Dados Pessoais</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" id="step-ind-2">
+          <div class="step-num">2</div>
+          <span class="step-lbl">Profissional</span>
+        </div>
+        <div class="step-line"></div>
+        <div class="step-item" id="step-ind-3">
+          <div class="step-num">3</div>
+          <span class="step-lbl">Extra</span>
+        </div>
+      </div>
+
       <form id="form-curriculo">
 
-        <section>
-          <h2>Dados Pessoais</h2>
-          <div class="linha">
-            <div class="campo">
-              <label>Nome completo *</label>
-              <input type="text" name="nome" placeholder="Ex: João da Silva" required />
+        <!-- Etapa 1: Dados Pessoais -->
+        <div id="etapa-1">
+          <section>
+            <h2>Dados Pessoais</h2>
+            <div class="linha">
+              <div class="campo">
+                <label>Nome completo *</label>
+                <input type="text" name="nome" placeholder="Ex: João da Silva" />
+              </div>
+              <div class="campo">
+                <label>Telefone / WhatsApp</label>
+                <input type="text" name="telefone" placeholder="Ex: (31) 99999-0000" />
+              </div>
             </div>
-            <div class="campo">
-              <label>Telefone</label>
-              <input type="text" name="telefone" placeholder="Ex: (31) 99999-0000" />
+            <div class="linha">
+              <div class="campo">
+                <label>E-mail</label>
+                <input type="email" name="email" placeholder="Ex: joao@email.com" />
+              </div>
+              <div class="campo">
+                <label>Cidade / Bairro</label>
+                <input type="text" name="cidade" placeholder="Ex: Belo Horizonte - MG" />
+              </div>
             </div>
+          </section>
+          <div class="etapa-nav">
+            <div></div>
+            <button type="button" class="btn-prox" onclick="irEtapa(2)">Próximo →</button>
           </div>
-          <div class="linha">
+        </div>
+
+        <!-- Etapa 2: Profissional -->
+        <div id="etapa-2" class="oculto">
+          <section>
+            <h2>Perfil Profissional</h2>
             <div class="campo">
-              <label>E-mail</label>
-              <input type="email" name="email" placeholder="Ex: joao@email.com" />
+              <label>Objetivo profissional *</label>
+              <input type="text" name="objetivo" placeholder="Ex: Auxiliar de Serviços Gerais, Motorista, Atendente" />
             </div>
             <div class="campo">
-              <label>Cidade / Bairro</label>
-              <input type="text" name="cidade" placeholder="Ex: Belo Horizonte - MG" />
+              <label>Escolaridade *</label>
+              <select name="escolaridade">
+                <option value="">Selecione...</option>
+                <option value="Ensino Fundamental Incompleto">Fundamental Incompleto</option>
+                <option value="Ensino Fundamental Completo">Fundamental Completo</option>
+                <option value="Ensino Médio Incompleto">Médio Incompleto</option>
+                <option value="Ensino Médio Completo">Médio Completo</option>
+                <option value="Ensino Superior Incompleto">Superior Incompleto</option>
+                <option value="Ensino Superior Completo">Superior Completo</option>
+              </select>
             </div>
-          </div>
-          <div class="linha">
             <div class="campo">
-              <label>WhatsApp</label>
-              <input type="text" name="whatsapp" placeholder="Ex: (31) 99999-0000" />
+              <label>Experiências Profissionais *</label>
+              <p class="dica">💡 Pode ser informal. Ex: "Trabalhou 5 anos como pedreiro por conta própria. Fez bicos de ajudante de carga."</p>
+              <textarea name="experiencias" rows="5" placeholder="Descreva as experiências do jeito que o cliente contou..."></textarea>
+            </div>
+          </section>
+          <div class="etapa-nav">
+            <button type="button" class="btn-voltar" onclick="irEtapa(1)">← Voltar</button>
+            <button type="button" class="btn-prox" onclick="irEtapa(3)">Próximo →</button>
+          </div>
+        </div>
+
+        <!-- Etapa 3: Extra -->
+        <div id="etapa-3" class="oculto">
+          <section>
+            <h2>Informações Extras <small style="font-weight:400;text-transform:none;background:none;-webkit-text-fill-color:var(--sub);font-size:0.75rem">(opcional)</small></h2>
+            <div class="linha">
+              <div class="campo">
+                <label>LinkedIn</label>
+                <input type="text" name="linkedin" placeholder="Ex: linkedin.com/in/joaosilva" />
+              </div>
+              <div class="campo">
+                <label>WhatsApp (se diferente do telefone)</label>
+                <input type="text" name="whatsapp" placeholder="Ex: (31) 99999-0000" />
+              </div>
             </div>
             <div class="campo">
-              <label>LinkedIn</label>
-              <input type="text" name="linkedin" placeholder="Ex: linkedin.com/in/joaosilva" />
+              <label>Habilidades</label>
+              <p class="dica">💡 Ex: "Pontual, trabalha bem em equipe, sabe dirigir, experiência com informática básica"</p>
+              <textarea name="habilidades" rows="3" placeholder="Liste as habilidades..."></textarea>
             </div>
+            <div class="campo">
+              <label>Cursos e Certificados</label>
+              <p class="dica">💡 Ex: "Curso de informática básica no SENAI (2022)"</p>
+              <textarea name="cursos" rows="3" placeholder="Liste cursos e certificados (se houver)..."></textarea>
+            </div>
+          </section>
+          <div class="etapa-nav">
+            <button type="button" class="btn-voltar" onclick="irEtapa(2)">← Voltar</button>
+            <button type="submit" id="btn-gerar">✨ Gerar Currículo</button>
           </div>
-        </section>
+        </div>
 
-        <section>
-          <h2>Objetivo e Formação</h2>
-          <div class="campo">
-            <label>Objetivo profissional *</label>
-            <input type="text" name="objetivo" placeholder="Ex: Auxiliar de Serviços Gerais, Ajudante Geral, Atendente" required />
-          </div>
-          <div class="campo">
-            <label>Escolaridade *</label>
-            <select name="escolaridade" required>
-              <option value="">Selecione...</option>
-              <option value="Ensino Fundamental Incompleto">Fundamental Incompleto</option>
-              <option value="Ensino Fundamental Completo">Fundamental Completo</option>
-              <option value="Ensino Médio Incompleto">Médio Incompleto</option>
-              <option value="Ensino Médio Completo">Médio Completo</option>
-              <option value="Ensino Superior Incompleto">Superior Incompleto</option>
-              <option value="Ensino Superior Completo">Superior Completo</option>
-            </select>
-          </div>
-        </section>
-
-        <section>
-          <h2>Experiências Profissionais *</h2>
-          <p class="dica">💡 Pode ser informal. Ex: "Trabalhou 5 anos como pedreiro por conta própria. Fez bicos de ajudante de carga."</p>
-          <textarea name="experiencias" rows="5" placeholder="Descreva as experiências do cliente aqui, do jeito que ele contou..." required></textarea>
-        </section>
-
-        <section>
-          <h2>Habilidades</h2>
-          <p class="dica">💡 Ex: "Pontual, trabalha bem em equipe, sabe dirigir, experiência com informática básica"</p>
-          <textarea name="habilidades" rows="3" placeholder="Liste as habilidades do cliente..."></textarea>
-        </section>
-
-        <section>
-          <h2>Cursos e Certificados</h2>
-          <p class="dica">💡 Ex: "Curso de informática básica no SENAI (2022)"</p>
-          <textarea name="cursos" rows="3" placeholder="Liste cursos e certificados (se houver)..."></textarea>
-        </section>
-
-        <button type="submit" id="btn-gerar">✨ Gerar Currículo</button>
       </form>
     </div>
 
     <!-- ABA 2: Atualizar PDF -->
     <div id="aba-pdf" class="oculto">
       <form id="form-pdf" enctype="multipart/form-data">
-
         <section>
           <h2>Currículo Antigo em PDF</h2>
           <p class="dica">💡 Envie o PDF do currículo antigo. A IA vai reescrever tudo de forma mais profissional.</p>
@@ -173,13 +231,11 @@
           </div>
           <div id="nome-arquivo" class="nome-arquivo oculto"></div>
         </section>
-
         <section>
           <h2>Informações Novas (opcional)</h2>
           <p class="dica">💡 Quer adicionar algo novo? Ex: "Trabalhou como motorista de aplicativo de 2023 até hoje. Novo objetivo: Motorista."</p>
           <textarea name="novaInfo" rows="4" placeholder="Descreva aqui qualquer informação nova que deve ser incluída no currículo..."></textarea>
         </section>
-
         <button type="submit" id="btn-gerar-pdf">✨ Atualizar Currículo</button>
       </form>
     </div>
@@ -197,16 +253,49 @@
       <pre id="texto-curriculo"></pre>
     </div>
 
-  </div>
+  </div><!-- /container -->
 
   <script>
-    let TEMPLATE = 'antigo';
+    let TEMPLATE = 'classico';
+    let etapaAtual = 1;
 
+    // ── Navegação Hero → App ────────────────────────────────────────────────────
+    function irParaApp(tipo) {
+      document.getElementById('secao-app').scrollIntoView({ behavior: 'smooth' });
+      setTimeout(() => trocarAba(tipo === 'pdf' ? 'pdf' : 'formulario'), 400);
+    }
+
+    // ── Template ────────────────────────────────────────────────────────────────
     function selecionarTemplate(t) {
       TEMPLATE = t;
       document.querySelectorAll(".template-card").forEach(c => {
         c.classList.toggle("ativo", c.dataset.template === t);
       });
+    }
+
+    // ── Etapas ──────────────────────────────────────────────────────────────────
+    function irEtapa(n) {
+      if (n > etapaAtual) {
+        if (etapaAtual === 1) {
+          const nome = document.querySelector("[name='nome']").value.trim();
+          if (!nome) { alert("Por favor, informe o nome completo."); return; }
+        }
+        if (etapaAtual === 2) {
+          const obj = document.querySelector("[name='objetivo']").value.trim();
+          const exp = document.querySelector("[name='experiencias']").value.trim();
+          const esc = document.querySelector("[name='escolaridade']").value;
+          if (!obj || !esc || !exp) { alert("Por favor, preencha objetivo, escolaridade e experiências."); return; }
+        }
+      }
+      document.getElementById(`etapa-${etapaAtual}`).classList.add("oculto");
+      document.getElementById(`etapa-${n}`).classList.remove("oculto");
+      [1, 2, 3].forEach(i => {
+        const el = document.getElementById(`step-ind-${i}`);
+        el.classList.toggle('ativa', i <= n);
+        el.classList.toggle('concluida', i < n);
+      });
+      etapaAtual = n;
+      document.getElementById('secao-app').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     // ── Troca de abas ──────────────────────────────────────────────────────────
@@ -229,9 +318,17 @@
       }
     });
 
-    // ── Envio de formulários ───────────────────────────────────────────────────
+    // ── Formulários ────────────────────────────────────────────────────────────
     document.getElementById("form-curriculo").addEventListener("submit", async (e) => {
       e.preventDefault();
+      const nome = document.querySelector("[name='nome']").value.trim();
+      const obj = document.querySelector("[name='objetivo']").value.trim();
+      const exp = document.querySelector("[name='experiencias']").value.trim();
+      const esc = document.querySelector("[name='escolaridade']").value;
+      if (!nome || !obj || !esc || !exp) {
+        alert("Preencha nome, objetivo, escolaridade e experiências.");
+        return;
+      }
       const dados = Object.fromEntries(new FormData(e.target).entries());
       dados.template = TEMPLATE;
       await enviarEExibir("/gerar-curriculo", "json", dados, "btn-gerar");
@@ -248,24 +345,20 @@
       const btn = document.getElementById(btnId);
       const resultado = document.getElementById("resultado");
       const textoCurriculo = document.getElementById("texto-curriculo");
-
       btn.disabled = true;
       btn.textContent = "⏳ Gerando...";
       resultado.classList.add("oculto");
       textoCurriculo.textContent = "";
-
       try {
         const opcoes = tipo === "json"
           ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) }
           : { method: "POST", body: dados };
-
         const resposta = await fetch(url, opcoes);
         if (!resposta.ok) { const err = await resposta.json(); alert("Erro: " + err.erro); return; }
-
         resultado.classList.remove("oculto");
+        resultado.scrollIntoView({ behavior: "smooth", block: "start" });
         const reader = resposta.body.getReader();
         const decoder = new TextDecoder();
-
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -319,42 +412,34 @@
       }
     }
 
-    // ── Salvar PDF com template real ───────────────────────────────────────────
+    // ── Salvar PDF ─────────────────────────────────────────────────────────────
     function salvarPDF() {
       const texto = document.getElementById("texto-curriculo").textContent;
       if (!texto.trim()) { alert("Gere o currículo primeiro!"); return; }
-
       const { nome, secoes } = parsearTexto(texto);
       const nomeReal = (nome && nome !== "Currículo")
         ? nome
         : (document.querySelector("input[name='nome']")?.value || "Currículo");
       const html = gerarHTML(nomeReal, secoes, TEMPLATE);
-
       const janela = window.open("", "_blank");
       janela.document.write(html);
       janela.document.close();
       setTimeout(() => janela.print(), 800);
     }
 
-    // ── Parser do texto ────────────────────────────────────────────────────────
+    // ── Parser ─────────────────────────────────────────────────────────────────
     function parsearTexto(texto) {
       const linhas = texto.split("\n");
       let nome = "";
       const secoes = [];
       let secaoAtual = null;
-
       const ehTitulo = (t) =>
         t.length > 2 && t === t.toUpperCase() && /[A-ZÁÉÍÓÚÀÂÊÔÃÕÇ]/.test(t);
-
       for (const linha of linhas) {
         const t = linha.trim();
         if (!t) { if (secaoAtual) secaoAtual.linhas.push(""); continue; }
         if (ehTitulo(t)) {
-          // Primeira linha em maiúsculo antes de qualquer seção = nome do candidato
-          if (!nome && secoes.length === 0 && !secaoAtual) {
-            nome = t;
-            continue;
-          }
+          if (!nome && secoes.length === 0 && !secaoAtual) { nome = t; continue; }
           if (secaoAtual) secoes.push(secaoAtual);
           secaoAtual = { titulo: t, linhas: [] };
         } else if (secaoAtual) {
@@ -364,7 +449,6 @@
         }
       }
       if (secaoAtual) secoes.push(secaoAtual);
-
       if (!nome) {
         const dp = secoes.find(s => s.titulo.includes("DADOS"));
         if (dp) {
@@ -396,6 +480,7 @@
         case "executivo": return htmlExecutivo(nome, secoes);
         case "simples":   return htmlSimples(nome, secoes);
         case "antigo":    return htmlAntigo(nome, secoes);
+        case "criativo":  return htmlCriativo(nome, secoes);
         default:          return htmlClassico(nome, secoes);
       }
     }
@@ -430,19 +515,16 @@ ${renderSecoes(secoes)}
       const isSide = (s) => /DADOS|CONTATO|HABILIDADES|CURSOS/i.test(s.titulo);
       const sidebar = secoes.filter(isSide);
       const principal = secoes.filter(s => !isSide(s));
-
       const rSide = (secs) => secs.map(s => `
         <div class="s-secao">
           <div class="s-titulo">${esc(s.titulo)}</div>
           ${s.linhas.map(l => l ? `<div class="s-linha">${esc(l)}</div>` : '<div style="height:4px"></div>').join("")}
         </div>`).join("");
-
       const rMain = (secs) => secs.map(s => `
         <div class="secao">
           <div class="sec-titulo">${esc(s.titulo)}</div>
           ${s.linhas.map(l => l ? `<div class="linha">${esc(l)}</div>` : '<div style="height:4px"></div>').join("")}
         </div>`).join("");
-
       return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(nome)}</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -500,21 +582,43 @@ body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
 </body></html>`;
     }
 
+    // CRIATIVO — borda lateral colorida, títulos em roxo
+    function htmlCriativo(nome, secoes) {
+      return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${esc(nome)}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:10.5pt;color:#1a1a1a;padding:16mm 20mm}
+.nome{font-size:20pt;font-weight:800;background:linear-gradient(135deg,#7b2fbe,#00b4d8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:1px;margin-bottom:3px}
+.divisor{height:3px;background:linear-gradient(90deg,#7b2fbe,#00b4d8);border:none;margin:0 0 16px}
+.secao{margin-bottom:14px;border-left:3px solid #7b2fbe;padding-left:10px}
+.sec-titulo{font-size:9.5pt;font-weight:bold;text-transform:uppercase;color:#7b2fbe;margin-bottom:5px;letter-spacing:0.07em}
+.linha{margin-bottom:3px;line-height:1.55}
+@page{margin:0}
+@media print{
+  body{padding:12mm 16mm}
+  .nome{-webkit-text-fill-color:#333!important;color:#333!important}
+  *{text-decoration:none!important}
+  .divisor{background:#777!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .secao{border-left-color:#555!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .sec-titulo{color:#333!important}
+}
+</style></head><body>
+<div class="nome">${esc(nome)}</div>
+<hr class="divisor">
+${renderSecoes(secoes)}
+</body></html>`;
+    }
+
     // ANTIGO — replica exatamente o formato do currículo tradicional brasileiro
-    // Seções-chave reconhecidas pelo parser geral (não são empresas)
     const SECOES_CHAVE_ANTIGO = /^(DADOS|OBJETIVO|ESCOLARIDADE|FORMA[ÇC][AÃ]O|EXPERI[EÊ]NCIA|HABILIDADES|QUALIFICA[ÇC][OÕ]ES|CURSOS|CARTA|INFORMA[ÇC][OÕ]ES)/i;
 
     function renderSecoesAntigo(secoes) {
       const secoesComBullet = /OBJETIVO|ESCOLARIDADE|QUALIFICA|CARTA/i;
       return secoes.map(s => {
         const usaBullet = secoesComBullet.test(s.titulo);
-        // Se o título não é uma seção-chave, foi uma empresa parseada como seção
         const ehEmpresa = !SECOES_CHAVE_ANTIGO.test(s.titulo);
-
         const linhasHtml = s.linhas.map(l => {
           if (!l) return `<div style="height:4px"></div>`;
-
-          // Linha com período de experiência: "Cargo  MM/AAAA – MM/AAAA"
           const periodoMatch = l.match(/(\d{2}\/\d{4}\s*[–\-]\s*\d{2}\/\d{4}.*)$/);
           if (periodoMatch) {
             const periodo = periodoMatch[1].trim();
@@ -524,31 +628,23 @@ body{font-family:Georgia,serif;font-size:10.5pt;color:#1a1a1a}
             }
             return `<div class="linha">${esc(l)}</div>`;
           }
-
-          // Linha em MAIÚSCULAS dentro de seção = nome de sub-empresa
           if (l === l.toUpperCase() && l.trim().length > 3 && /[A-Z]/.test(l)) {
             return `<div class="linha empresa">${esc(l)}</div>`;
           }
-
-          // Seções com bullet
           if (usaBullet && /^\s*[-–•❖]/.test(l)) {
             return `<div class="linha bullet">❖ ${esc(l.replace(/^\s*[-–•❖]\s*/, ''))}</div>`;
           }
           if (usaBullet) {
             return `<div class="linha bullet">❖ ${esc(l)}</div>`;
           }
-
           return `<div class="linha">${esc(l)}</div>`;
         }).join("");
-
-        // Empresa foi parseada como seção → renderiza como linha negrita sem fundo cinza
         if (ehEmpresa) {
           return `<div class="secao-empresa">
             <div class="empresa">${esc(s.titulo)}</div>
             ${linhasHtml}
           </div>`;
         }
-
         return `<div class="secao">
           <div class="sec-titulo">${esc(s.titulo)}</div>
           ${linhasHtml}
