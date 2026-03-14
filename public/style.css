@@ -776,6 +776,45 @@ input[type="file"]:hover {
 .tpl-cri-bar  { height: 2px; background: linear-gradient(90deg,#7b2fbe,#00b4d8); }
 .tpl-cri-sec  { height: 3px; width: 50%; background: #7b2fbe; border-radius: 1px; margin-top: 2px; border-left: 2px solid #7b2fbe; }
 
+/* ═══════ PREVIEW CURRÍCULO ═════════════════════════════════ */
+.preview-curriculo-wrap {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.preview-lbl {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--sub);
+  margin-bottom: 10px;
+}
+
+.preview-frame-wrap {
+  width: 340px;
+  height: 481px;
+  overflow: hidden;
+  margin: 0 auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06);
+  background: #fff;
+}
+
+#prev-frame {
+  width: 794px;
+  height: 1123px;
+  border: none;
+  transform: scale(0.4282);
+  transform-origin: 0 0;
+  pointer-events: none;
+}
+
+@media (max-width: 640px) {
+  .preview-frame-wrap { width: 280px; height: 396px; }
+  #prev-frame { transform: scale(0.3526); }
+}
+
 /* ═══════ UTILITÁRIOS ════════════════════════════════════════ */
 .oculto { display: none; }
 

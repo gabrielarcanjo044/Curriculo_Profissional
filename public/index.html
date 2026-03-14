@@ -86,7 +86,7 @@
             <div class="tpl-bloco"></div>
             <div class="tpl-bloco curto"></div>
           </div>
-          <span>Clássico</span>
+          <span>Corporativo</span>
         </div>
         <div class="template-card" data-template="executivo" onclick="selecionarTemplate('executivo')">
           <div class="tpl-preview tpl-executivo">
@@ -105,7 +105,7 @@
               <div class="tpl-bloco curto"></div>
             </div>
           </div>
-          <span>Moderno</span>
+          <span>Tech</span>
         </div>
         <div class="template-card" data-template="simples" onclick="selecionarTemplate('simples')">
           <div class="tpl-preview tpl-simples">
@@ -114,7 +114,7 @@
             <div class="tpl-bloco cinza"></div>
             <div class="tpl-bloco curto cinza"></div>
           </div>
-          <span>Simples</span>
+          <span>Primeiro Emprego</span>
         </div>
         <div class="template-card" data-template="criativo" onclick="selecionarTemplate('criativo')">
           <div class="tpl-preview tpl-criativo">
@@ -125,6 +125,14 @@
             <div class="tpl-bloco curto"></div>
           </div>
           <span>Criativo</span>
+        </div>
+      </div>
+
+      <!-- Mini prévia real do currículo -->
+      <div class="preview-curriculo-wrap">
+        <div class="preview-lbl">Prévia do modelo selecionado</div>
+        <div class="preview-frame-wrap">
+          <iframe id="prev-frame" title="Prévia do currículo" scrolling="no" sandbox="allow-same-origin"></iframe>
         </div>
       </div>
     </div>
@@ -306,6 +314,29 @@
       document.querySelectorAll(".template-card").forEach(c => {
         c.classList.toggle("ativo", c.dataset.template === t);
       });
+      atualizarPreview(t);
+    }
+
+    // ── Preview real do currículo ────────────────────────────────────────────────
+    const SAMPLE_NOME = "MARIA DA SILVA";
+    const SAMPLE_SECOES = [
+      { titulo: "DADOS PESSOAIS", linhas: ["Belo Horizonte - MG", "(31) 99999-0000", "maria@email.com"] },
+      { titulo: "OBJETIVO", linhas: ["Auxiliar Administrativo"] },
+      { titulo: "EXPERIÊNCIA PROFISSIONAL", linhas: [
+        "Empresa ABC Ltda",
+        "Assistente Administrativo · Jan/2020 – Dez/2023",
+        "Atendimento ao cliente, organização de documentos e suporte à equipe.",
+        "",
+        "Mercado Bom Preço",
+        "Operador de Caixa · Mar/2018 – Dez/2019",
+        "Operação de caixa, reposição de mercadorias e atendimento ao público.",
+      ]},
+      { titulo: "ESCOLARIDADE", linhas: ["Ensino Médio Completo – Colégio Estadual, 2018"] },
+      { titulo: "HABILIDADES", linhas: ["Informática básica (Word, Excel)", "Trabalho em equipe", "Pontualidade e comprometimento"] },
+    ];
+
+    function atualizarPreview(t) {
+      document.getElementById("prev-frame").srcdoc = gerarHTML(SAMPLE_NOME, SAMPLE_SECOES, t);
     }
 
     // ── Etapas ──────────────────────────────────────────────────────────────────
@@ -740,6 +771,8 @@ body{font-family:Calibri,Arial,sans-serif;font-size:10.5pt;color:#111;padding:16
 ${renderSecoes(secoes)}
 </body></html>`;
     }
+    // Inicializa prévia com o template padrão
+    atualizarPreview('classico');
   </script>
 
 </body>
