@@ -4,13 +4,81 @@ const multer = require("multer");
 const pdfParse = require("pdf-parse");
 const Anthropic = require("@anthropic-ai/sdk").default;
 const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ShadingType, TabStopType, TabStopPosition } = require("docx");
+const Database = require("better-sqlite3");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const upload = multer({ storage: multer.memoryStorage() });
+const JWT_SECRET = process.env.JWT_SECRET || "curriculo-secret-local";
+
+// ─── Banco de dados ───────────────────────────────────────────────────────────
+const db = new Database(process.env.DB_PATH || "data.db");
+db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now'))
+  );
+  CREATE TABLE IF NOT EXISTS usage (
+    user_id INTEGER PRIMARY KEY,
+    count INTEGER DEFAULT 0,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+  );
+`);
 
 app.use(express.json());
 app.use(express.static("public"));
+
+// ─── Autenticação ─────────────────────────────────────────────────────────────
+app.post("/register", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ erro: "Email e senha obrigatórios." });
+  try {
+    const hash = await bcrypt.hash(password, 10);
+    const user = db.prepare("INSERT INTO users (email, password_hash) VALUES (?, ?)").run(email, hash);
+    db.prepare("INSERT INTO usage (user_id, count) VALUES (?, 0)").run(user.lastInsertRowid);
+    const token = jwt.sign({ id: user.lastInsertRowid, email }, JWT_SECRET);
+    res.json({ token });
+  } catch {
+    res.status(400).json({ erro: "Este email já está cadastrado." });
+  }
+});
+
+app.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
+  if (!user || !(await bcrypt.compare(password, user.password_hash)))
+    return res.status(401).json({ erro: "Email ou senha incorretos." });
+  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET);
+  res.json({ token });
+});
+
+app.get("/me", authMiddleware, (req, res) => {
+  const row = db.prepare("SELECT count FROM usage WHERE user_id = ?").get(req.user.id);
+  res.json({ email: req.user.email, geracoes_usadas: row?.count || 0, limite: 3 });
+});
+
+// ─── Middlewares ──────────────────────────────────────────────────────────────
+function authMiddleware(req, res, next) {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ erro: "Login necessário." });
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ erro: "Sessão inválida. Faça login novamente." });
+  }
+}
+
+function usageMiddleware(req, res, next) {
+  const row = db.prepare("SELECT count FROM usage WHERE user_id = ?").get(req.user.id);
+  if (!row || row.count >= 3) return res.status(429).json({ erro: "limite_atingido" });
+  db.prepare("UPDATE usage SET count = count + 1 WHERE user_id = ?").run(req.user.id);
+  next();
+}
 
 // ─── Pós-processamento para template Antigo ───────────────────────────────────
 const MESES_PT = {
@@ -106,7 +174,7 @@ async function coletarResposta(messages) {
 }
 
 // ─── Rota: Gerar currículo a partir do formulário ───────────────────────────
-app.post("/gerar-curriculo", async (req, res) => {
+app.post("/gerar-curriculo", authMiddleware, usageMiddleware, async (req, res) => {
   const { nome, telefone, email, cidade, whatsapp, linkedin, objetivo, escolaridade, experiencias, habilidades, cursos, template } = req.body;
 
   const contatoExtra = [
@@ -214,7 +282,7 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
 });
 
 // ─── Rota: Atualizar currículo a partir de PDF ───────────────────────────────
-app.post("/atualizar-pdf", upload.single("pdf"), async (req, res) => {
+app.post("/atualizar-pdf", authMiddleware, usageMiddleware, upload.single("pdf"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ erro: "Nenhum PDF enviado." });
   }
@@ -426,7 +494,7 @@ function gerarWordAntigo(texto, nome) {
 }
 
 // ─── Rota: Salvar como Word (.docx) ──────────────────────────────────────────
-app.post("/salvar-word", async (req, res) => {
+app.post("/salvar-word", authMiddleware, async (req, res) => {
   const { texto, nome, template } = req.body;
   if (!texto) return res.status(400).json({ erro: "Texto vazio." });
 

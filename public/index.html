@@ -8,6 +8,46 @@
 </head>
 <body>
 
+  <!-- ═══════ MODAL AUTH ═══════ -->
+  <div id="modal-auth" class="modal-auth-overlay">
+    <div class="modal-auth-box">
+      <h2 class="modal-auth-titulo">Currículo Profissional com IA</h2>
+      <p class="modal-auth-sub">Crie sua conta grátis e ganhe <strong>3 gerações gratuitas</strong></p>
+      <div class="modal-auth-abas">
+        <button class="modal-aba ativa" onclick="trocarModalAba('cadastro')">Cadastrar</button>
+        <button class="modal-aba" onclick="trocarModalAba('login')">Entrar</button>
+      </div>
+      <div id="modal-form-cadastro">
+        <input type="email" id="auth-email-cad" placeholder="Seu email" class="auth-input" />
+        <input type="password" id="auth-senha-cad" placeholder="Criar senha (mínimo 6 caracteres)" class="auth-input" />
+        <button class="auth-btn" onclick="fazerCadastro()">Criar conta grátis</button>
+      </div>
+      <div id="modal-form-login" class="oculto">
+        <input type="email" id="auth-email-log" placeholder="Seu email" class="auth-input" />
+        <input type="password" id="auth-senha-log" placeholder="Sua senha" class="auth-input" />
+        <button class="auth-btn" onclick="fazerLogin()">Entrar</button>
+      </div>
+      <p id="auth-erro" class="auth-erro oculto"></p>
+    </div>
+  </div>
+
+  <!-- ═══════ MODAL LIMITE ATINGIDO ═══════ -->
+  <div id="modal-limite" class="modal-auth-overlay oculto">
+    <div class="modal-auth-box">
+      <div style="font-size:2.5rem;margin-bottom:12px">🚀</div>
+      <h2 class="modal-auth-titulo">Você usou suas 3 gerações gratuitas!</h2>
+      <p class="modal-auth-sub" style="margin-bottom:20px">Para continuar gerando currículos profissionais, escolha um plano:</p>
+      <div style="background:rgba(0,180,216,0.1);border:1px solid #00b4d8;border-radius:12px;padding:20px;margin-bottom:20px">
+        <div style="font-size:1.5rem;font-weight:bold;color:#00b4d8">R$ 9,90 / mês</div>
+        <div style="color:#e2e8f0;margin-top:6px">Gerações ilimitadas · PDF + Word · 5 modelos</div>
+      </div>
+      <a href="https://wa.me/5531999999999?text=Quero+o+plano+ilimitado+de+curr%C3%ADculo" target="_blank" class="auth-btn" style="text-decoration:none;display:block;text-align:center">
+        💬 Contratar via WhatsApp
+      </a>
+      <button onclick="document.getElementById('modal-limite').classList.add('oculto')" style="background:none;border:none;color:var(--sub);cursor:pointer;margin-top:14px;font-size:0.85rem">Fechar</button>
+    </div>
+  </div>
+
   <!-- ═══════ HERO ═══════ -->
   <div class="hero">
     <div class="hero-inner">
@@ -73,6 +113,10 @@
 
   <!-- ═══════ APP PRINCIPAL ═══════ -->
   <div class="container" id="secao-app">
+    <div class="auth-bar">
+      <span id="auth-user-info"></span>
+      <button id="btn-logout" class="btn-logout oculto" onclick="fazerLogout()">Sair</button>
+    </div>
 
     <!-- Seletor de Template -->
     <div class="template-selector">
@@ -301,6 +345,81 @@
     let TEMPLATE = 'classico';
     let etapaAtual = 1;
 
+    // ── Auth ────────────────────────────────────────────────────────────────────
+    function getToken() { return localStorage.getItem("token"); }
+
+    function trocarModalAba(aba) {
+      document.getElementById("modal-form-cadastro").classList.toggle("oculto", aba !== "cadastro");
+      document.getElementById("modal-form-login").classList.toggle("oculto", aba !== "login");
+      document.querySelectorAll(".modal-aba").forEach((b, i) => {
+        b.classList.toggle("ativa", (i === 0 && aba === "cadastro") || (i === 1 && aba === "login"));
+      });
+      document.getElementById("auth-erro").classList.add("oculto");
+    }
+
+    function mostrarErroAuth(msg) {
+      const el = document.getElementById("auth-erro");
+      el.textContent = msg;
+      el.classList.remove("oculto");
+    }
+
+    async function fazerCadastro() {
+      const email = document.getElementById("auth-email-cad").value.trim();
+      const password = document.getElementById("auth-senha-cad").value;
+      if (!email || password.length < 6) { mostrarErroAuth("Email válido e senha com mínimo 6 caracteres."); return; }
+      const res = await fetch("/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      const data = await res.json();
+      if (!res.ok) { mostrarErroAuth(data.erro); return; }
+      localStorage.setItem("token", data.token);
+      fecharModalAuth();
+      atualizarInfoUsuario();
+    }
+
+    async function fazerLogin() {
+      const email = document.getElementById("auth-email-log").value.trim();
+      const password = document.getElementById("auth-senha-log").value;
+      const res = await fetch("/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+      const data = await res.json();
+      if (!res.ok) { mostrarErroAuth(data.erro); return; }
+      localStorage.setItem("token", data.token);
+      fecharModalAuth();
+      atualizarInfoUsuario();
+    }
+
+    function fazerLogout() {
+      localStorage.removeItem("token");
+      document.getElementById("modal-auth").classList.remove("oculto");
+      document.getElementById("auth-user-info").textContent = "";
+      document.getElementById("btn-logout").classList.add("oculto");
+    }
+
+    function fecharModalAuth() {
+      document.getElementById("modal-auth").classList.add("oculto");
+    }
+
+    async function atualizarInfoUsuario() {
+      const token = getToken();
+      if (!token) return;
+      try {
+        const res = await fetch("/me", { headers: { "Authorization": "Bearer " + token } });
+        if (!res.ok) { fazerLogout(); return; }
+        const data = await res.json();
+        const restante = 3 - data.geracoes_usadas;
+        document.getElementById("auth-user-info").textContent = `${data.email} · ${restante} geração${restante !== 1 ? 'ões' : ''} disponível${restante !== 1 ? 'eis' : ''}`;
+        document.getElementById("btn-logout").classList.remove("oculto");
+      } catch {}
+    }
+
+    // Inicializa auth
+    (function() {
+      if (!getToken()) {
+        document.getElementById("modal-auth").classList.remove("oculto");
+      } else {
+        document.getElementById("modal-auth").classList.add("oculto");
+        atualizarInfoUsuario();
+      }
+    })();
+
     // ── Navegação Hero → App ────────────────────────────────────────────────────
     function irParaApp(tipo) {
       document.getElementById('secao-app').scrollIntoView({ behavior: 'smooth' });
@@ -415,10 +534,16 @@
       resultado.classList.add("oculto");
       textoCurriculo.textContent = "";
       try {
-        const opcoes = tipo === "json"
-          ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(dados) }
-          : { method: "POST", body: dados };
+        const token = getToken();
+        let opcoes;
+        if (tipo === "json") {
+          opcoes = { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token }, body: JSON.stringify(dados) };
+        } else {
+          opcoes = { method: "POST", headers: { "Authorization": "Bearer " + token }, body: dados };
+        }
         const resposta = await fetch(url, opcoes);
+        if (resposta.status === 401) { fazerLogout(); document.getElementById("modal-auth").classList.remove("oculto"); return; }
+        if (resposta.status === 429) { document.getElementById("modal-limite").classList.remove("oculto"); return; }
         if (!resposta.ok) { const err = await resposta.json(); alert("Erro: " + err.erro); return; }
         resultado.classList.remove("oculto");
         resultado.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -430,6 +555,7 @@
           textoCurriculo.textContent += decoder.decode(value, { stream: true });
           textoCurriculo.scrollIntoView({ behavior: "smooth", block: "end" });
         }
+        atualizarInfoUsuario();
       } catch (err) {
         alert("Erro de conexão: " + err.message);
       } finally {
@@ -459,7 +585,7 @@
           ? nomeExtraido
           : (document.querySelector("input[name='nome']")?.value || "");
         const resposta = await fetch("/salvar-word", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getToken() },
           body: JSON.stringify({ texto, nome, template: TEMPLATE })
         });
         if (!resposta.ok) { alert("Erro ao gerar Word."); return; }
