@@ -25,9 +25,12 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS usage (
     user_id INTEGER PRIMARY KEY,
     count INTEGER DEFAULT 0,
+    premium_until TEXT DEFAULT NULL,
     FOREIGN KEY(user_id) REFERENCES users(id)
   );
 `);
+// Migração: adiciona coluna se não existir
+try { db.exec("ALTER TABLE usage ADD COLUMN premium_until TEXT DEFAULT NULL"); } catch (_) {}
 
 app.use(express.json());
 app.use(express.static("public"));
@@ -57,8 +60,15 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/me", authMiddleware, (req, res) => {
-  const row = db.prepare("SELECT count FROM usage WHERE user_id = ?").get(req.user.id);
-  res.json({ email: req.user.email, geracoes_usadas: row?.count || 0, limite: 3 });
+  const row = db.prepare("SELECT count, premium_until FROM usage WHERE user_id = ?").get(req.user.id);
+  const premium = row?.premium_until && new Date(row.premium_until) > new Date();
+  res.json({
+    email: req.user.email,
+    geracoes_usadas: row?.count || 0,
+    limite: 3,
+    premium,
+    premium_until: row?.premium_until || null,
+  });
 });
 
 // ─── Middlewares ──────────────────────────────────────────────────────────────
@@ -74,11 +84,75 @@ function authMiddleware(req, res, next) {
 }
 
 function usageMiddleware(req, res, next) {
-  const row = db.prepare("SELECT count FROM usage WHERE user_id = ?").get(req.user.id);
-  if (!row || row.count >= 3) return res.status(429).json({ erro: "limite_atingido" });
-  db.prepare("UPDATE usage SET count = count + 1 WHERE user_id = ?").run(req.user.id);
+  const row = db.prepare("SELECT count, premium_until FROM usage WHERE user_id = ?").get(req.user.id);
+  const premium = row?.premium_until && new Date(row.premium_until) > new Date();
+  if (!premium && (!row || row.count >= 3)) return res.status(429).json({ erro: "limite_atingido" });
+  if (!premium) db.prepare("UPDATE usage SET count = count + 1 WHERE user_id = ?").run(req.user.id);
   next();
 }
+
+// ─── Pagamento InfinitePay ────────────────────────────────────────────────────
+const INFINITEPAY_HANDLE = process.env.INFINITEPAY_HANDLE || "infor__02_servic";
+const PRECO_CENTAVOS = 990; // R$ 9,90
+
+app.post("/criar-pagamento", authMiddleware, async (req, res) => {
+  const orderNsu = `user_${req.user.id}_${Date.now()}`;
+  const baseUrl = process.env.BASE_URL || "https://curriculos.geminirecords.com.br";
+
+  try {
+    const resposta = await fetch("https://api.infinitepay.io/invoices/public/checkout/links", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        handle: INFINITEPAY_HANDLE,
+        order_nsu: orderNsu,
+        redirect_url: `${baseUrl}/?pagamento=sucesso`,
+        webhook_url: `${baseUrl}/webhook-infinitepay`,
+        items: [{
+          quantity: 1,
+          price: PRECO_CENTAVOS,
+          description: "Currículo Profissional — Plano Mensal Ilimitado",
+        }],
+      }),
+    });
+
+    if (!resposta.ok) {
+      const erro = await resposta.text();
+      console.error("InfinitePay erro:", erro);
+      return res.status(500).json({ erro: "Erro ao criar link de pagamento." });
+    }
+
+    const dados = await resposta.json();
+    res.json({ url: dados.checkout_url || dados.url || dados.link });
+  } catch (e) {
+    console.error("Criar pagamento:", e.message);
+    res.status(500).json({ erro: "Erro de conexão com InfinitePay." });
+  }
+});
+
+app.post("/webhook-infinitepay", express.json(), (req, res) => {
+  try {
+    const { order_nsu } = req.body;
+    if (!order_nsu) return res.status(400).json({ ok: false });
+
+    // order_nsu formato: user_123_timestamp
+    const match = order_nsu.match(/^user_(\d+)_\d+$/);
+    if (!match) return res.status(400).json({ ok: false });
+
+    const userId = parseInt(match[1], 10);
+    const premiumAte = new Date();
+    premiumAte.setDate(premiumAte.getDate() + 30);
+
+    db.prepare("UPDATE usage SET premium_until = ? WHERE user_id = ?")
+      .run(premiumAte.toISOString(), userId);
+
+    console.log(`✅ Premium ativado para user ${userId} até ${premiumAte.toISOString()}`);
+    res.status(200).json({ ok: true });
+  } catch (e) {
+    console.error("Webhook erro:", e.message);
+    res.status(400).json({ ok: false });
+  }
+});
 
 // ─── Pós-processamento para template Antigo ───────────────────────────────────
 const MESES_PT = {

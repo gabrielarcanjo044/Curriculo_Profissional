@@ -36,14 +36,13 @@
     <div class="modal-auth-box">
       <div style="font-size:2.5rem;margin-bottom:12px">🚀</div>
       <h2 class="modal-auth-titulo">Você usou suas 3 gerações gratuitas!</h2>
-      <p class="modal-auth-sub" style="margin-bottom:20px">Para continuar gerando currículos profissionais, escolha um plano:</p>
+      <p class="modal-auth-sub" style="margin-bottom:20px">Para continuar gerando currículos profissionais, assine o plano mensal:</p>
       <div style="background:rgba(0,180,216,0.1);border:1px solid #00b4d8;border-radius:12px;padding:20px;margin-bottom:20px">
         <div style="font-size:1.5rem;font-weight:bold;color:#00b4d8">R$ 9,90 / mês</div>
         <div style="color:#e2e8f0;margin-top:6px">Gerações ilimitadas · PDF + Word · 5 modelos</div>
       </div>
-      <a href="https://wa.me/5531999999999?text=Quero+o+plano+ilimitado+de+curr%C3%ADculo" target="_blank" class="auth-btn" style="text-decoration:none;display:block;text-align:center">
-        💬 Contratar via WhatsApp
-      </a>
+      <button type="button" id="btn-assinar" class="auth-btn" onclick="assinarPlano()">💳 Assinar agora — R$ 9,90/mês</button>
+      <p id="pagamento-erro" style="color:#f87171;font-size:0.85rem;margin-top:10px;display:none"></p>
       <button onclick="document.getElementById('modal-limite').classList.add('oculto')" style="background:none;border:none;color:var(--sub);cursor:pointer;margin-top:14px;font-size:0.85rem">Fechar</button>
     </div>
   </div>
@@ -404,10 +403,39 @@
         const res = await fetch("/me", { headers: { "Authorization": "Bearer " + token } });
         if (!res.ok) { fazerLogout(); return; }
         const data = await res.json();
-        const restante = 3 - data.geracoes_usadas;
-        document.getElementById("auth-user-info").textContent = `${data.email} · ${restante} geração${restante !== 1 ? 'ões' : ''} disponível${restante !== 1 ? 'eis' : ''}`;
+        let info;
+        if (data.premium) {
+          const ate = new Date(data.premium_until).toLocaleDateString("pt-BR");
+          info = `${data.email} · ⭐ Premium até ${ate}`;
+        } else {
+          const restante = 3 - data.geracoes_usadas;
+          info = `${data.email} · ${restante} geração${restante !== 1 ? 'ões' : ''} grátis restante${restante !== 1 ? 's' : ''}`;
+        }
+        document.getElementById("auth-user-info").textContent = info;
         document.getElementById("btn-logout").classList.remove("oculto");
       } catch {}
+    }
+
+    async function assinarPlano() {
+      const btn = document.getElementById("btn-assinar");
+      const erroEl = document.getElementById("pagamento-erro");
+      btn.disabled = true;
+      btn.textContent = "⏳ Aguarde...";
+      erroEl.style.display = "none";
+      try {
+        const res = await fetch("/criar-pagamento", {
+          method: "POST",
+          headers: { "Authorization": "Bearer " + getToken() },
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.erro || "Erro ao gerar link de pagamento.");
+        window.location.href = data.url;
+      } catch (e) {
+        erroEl.textContent = e.message;
+        erroEl.style.display = "block";
+        btn.disabled = false;
+        btn.textContent = "💳 Assinar agora — R$ 9,90/mês";
+      }
     }
 
     // Inicializa auth
@@ -417,6 +445,11 @@
       } else {
         document.getElementById("modal-auth").classList.add("oculto");
         atualizarInfoUsuario();
+        // Retorno após pagamento InfinitePay
+        if (new URLSearchParams(window.location.search).get("pagamento") === "sucesso") {
+          history.replaceState({}, "", "/");
+          setTimeout(() => alert("✅ Pagamento confirmado! Seu plano premium foi ativado."), 500);
+        }
       }
     })();
 
