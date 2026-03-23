@@ -8,10 +8,25 @@
 </head>
 <body>
 
+  <!-- ═══════ NAVBAR ═══════ -->
+  <nav class="navbar">
+    <div class="nav-inner">
+      <a class="nav-brand" href="/">
+        <div class="nav-logo">𝄞</div>
+        <span class="nav-nome">geminiCurriculos</span>
+      </a>
+      <div class="nav-usuario">
+        <span id="auth-user-info"></span>
+        <button id="btn-logout" class="btn-logout oculto" onclick="fazerLogout()">Sair</button>
+      </div>
+    </div>
+  </nav>
+
   <!-- ═══════ MODAL AUTH ═══════ -->
   <div id="modal-auth" class="modal-auth-overlay">
     <div class="modal-auth-box">
-      <h2 class="modal-auth-titulo">Currículo Profissional com IA</h2>
+      <div class="modal-logo">𝄞</div>
+      <h2 class="modal-auth-titulo">geminiCurriculos</h2>
       <p class="modal-auth-sub">Crie sua conta grátis e ganhe <strong>3 gerações gratuitas</strong></p>
       <div class="modal-auth-abas">
         <button class="modal-aba ativa" onclick="trocarModalAba('cadastro')">Cadastrar</button>
@@ -112,11 +127,6 @@
 
   <!-- ═══════ APP PRINCIPAL ═══════ -->
   <div class="container" id="secao-app">
-    <div class="auth-bar">
-      <span id="auth-user-info"></span>
-      <button id="btn-logout" class="btn-logout oculto" onclick="fazerLogout()">Sair</button>
-    </div>
-
     <!-- Seletor de Template -->
     <div class="template-selector">
       <p class="template-label">Escolha o modelo ideal para sua vaga:</p>
