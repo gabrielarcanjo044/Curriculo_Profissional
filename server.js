@@ -266,7 +266,7 @@ function postProcessarAntigo(texto) {
 }
 
 async function coletarResposta(messages) {
-  const stream = client.messages.stream({ model: "claude-opus-4-6", max_tokens: 2048, messages });
+  const stream = client.messages.stream({ model: "claude-haiku-4-5-20251001", max_tokens: 2048, messages });
   let texto = '';
   for await (const ev of stream)
     if (ev.type === "content_block_delta" && ev.delta.type === "text_delta")
@@ -497,7 +497,7 @@ REGRAS DE FORMATAÇÃO (SIGA EXATAMENTE):
       res.write(postProcessarAntigo(raw));
       res.end();
     } else {
-      const stream = client.messages.stream({ model: "claude-opus-4-6", max_tokens: 2048, messages });
+      const stream = client.messages.stream({ model: "claude-haiku-4-5-20251001", max_tokens: 2048, messages });
       for await (const event of stream)
         if (event.type === "content_block_delta" && event.delta.type === "text_delta")
           res.write(event.delta.text);
@@ -644,7 +644,7 @@ app.post("/salvar-word", authMiddleware, async (req, res) => {
 async function gerarComStream(prompt, res) {
   try {
     const stream = client.messages.stream({
-      model: "claude-opus-4-6",
+      model: "claude-haiku-4-5-20251001",
       max_tokens: 2048,
       messages: [{ role: "user", content: prompt }],
     });
