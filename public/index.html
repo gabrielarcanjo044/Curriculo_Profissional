@@ -27,10 +27,11 @@
     <div class="modal-auth-box">
       <div class="modal-logo">𝄞</div>
       <h2 class="modal-auth-titulo">Faz Meu Currículo</h2>
-      <p class="modal-auth-sub">Crie sua conta grátis e ganhe <strong>3 gerações gratuitas</strong></p>
+      <p class="modal-auth-sub" id="modal-auth-sub">Crie sua conta grátis e ganhe <strong>3 gerações gratuitas</strong></p>
       <div class="modal-auth-abas">
         <button class="modal-aba ativa" onclick="trocarModalAba('cadastro')">Cadastrar</button>
         <button class="modal-aba" onclick="trocarModalAba('login')">Entrar</button>
+        <button class="modal-aba" onclick="trocarModalAba('empresa')">Empresa</button>
       </div>
       <div id="modal-form-cadastro">
         <input type="email" id="auth-email-cad" placeholder="Seu email" class="auth-input" />
@@ -41,6 +42,10 @@
         <input type="email" id="auth-email-log" placeholder="Seu email" class="auth-input" />
         <input type="password" id="auth-senha-log" placeholder="Sua senha" class="auth-input" />
         <button class="auth-btn" onclick="fazerLogin()">Entrar</button>
+      </div>
+      <div id="modal-form-empresa" class="oculto">
+        <input type="password" id="auth-codigo-empresa" placeholder="Código de acesso empresarial" class="auth-input" />
+        <button class="auth-btn" onclick="fazerLoginEmpresa()">Acessar</button>
       </div>
       <p id="auth-erro" class="auth-erro oculto"></p>
     </div>
@@ -360,9 +365,13 @@
     function trocarModalAba(aba) {
       document.getElementById("modal-form-cadastro").classList.toggle("oculto", aba !== "cadastro");
       document.getElementById("modal-form-login").classList.toggle("oculto", aba !== "login");
-      document.querySelectorAll(".modal-aba").forEach((b, i) => {
-        b.classList.toggle("ativa", (i === 0 && aba === "cadastro") || (i === 1 && aba === "login"));
-      });
+      document.getElementById("modal-form-empresa").classList.toggle("oculto", aba !== "empresa");
+      const abas = ["cadastro", "login", "empresa"];
+      document.querySelectorAll(".modal-aba").forEach((b, i) => b.classList.toggle("ativa", abas[i] === aba));
+      const sub = document.getElementById("modal-auth-sub");
+      sub.innerHTML = aba === "empresa"
+        ? "Acesso <strong>Infor 02</strong> — gerações ilimitadas"
+        : "Crie sua conta grátis e ganhe <strong>3 gerações gratuitas</strong>";
       document.getElementById("auth-erro").classList.add("oculto");
     }
 
@@ -395,6 +404,17 @@
       atualizarInfoUsuario();
     }
 
+    async function fazerLoginEmpresa() {
+      const code = document.getElementById("auth-codigo-empresa").value.trim();
+      if (!code) { mostrarErroAuth("Informe o código de acesso."); return; }
+      const res = await fetch("/empresa-login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) });
+      const data = await res.json();
+      if (!res.ok) { mostrarErroAuth(data.erro); return; }
+      localStorage.setItem("token", data.token);
+      fecharModalAuth();
+      atualizarInfoUsuario();
+    }
+
     function fazerLogout() {
       localStorage.removeItem("token");
       document.getElementById("modal-auth").classList.remove("oculto");
@@ -414,7 +434,9 @@
         if (!res.ok) { fazerLogout(); return; }
         const data = await res.json();
         let info;
-        if (data.premium) {
+        if (data.empresa) {
+          info = `Infor 02 · ♾ Ilimitado`;
+        } else if (data.premium) {
           const ate = new Date(data.premium_until).toLocaleDateString("pt-BR");
           info = `${data.email} · ⭐ Premium até ${ate}`;
         } else {

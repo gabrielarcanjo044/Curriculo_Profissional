@@ -14,6 +14,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const upload = multer({ storage: multer.memoryStorage() });
 const JWT_SECRET = process.env.JWT_SECRET || "curriculo-secret-local";
 const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET || "";
+const COMPANY_CODE = process.env.COMPANY_CODE || "";
 
 // ─── Rate limiters ────────────────────────────────────────────────────────────
 const authLimiter = rateLimit({
@@ -70,7 +71,18 @@ app.post("/login", authLimiter, async (req, res) => {
   res.json({ token });
 });
 
+app.post("/empresa-login", authLimiter, (req, res) => {
+  const { code } = req.body;
+  if (!COMPANY_CODE || !code || code !== COMPANY_CODE)
+    return res.status(401).json({ erro: "Código incorreto." });
+  const token = jwt.sign({ id: 0, email: "Infor 02", empresa: true }, JWT_SECRET, { expiresIn: "365d" });
+  res.json({ token });
+});
+
 app.get("/me", authMiddleware, (req, res) => {
+  if (req.user.empresa) {
+    return res.json({ email: "Infor 02", geracoes_usadas: 0, limite: null, premium: true, empresa: true });
+  }
   const row = db.prepare("SELECT count, premium_until FROM usage WHERE user_id = ?").get(req.user.id);
   const premium = row?.premium_until && new Date(row.premium_until) > new Date();
   res.json({
@@ -95,6 +107,7 @@ function authMiddleware(req, res, next) {
 }
 
 function usageMiddleware(req, res, next) {
+  if (req.user.empresa) return next();
   const row = db.prepare("SELECT count, premium_until FROM usage WHERE user_id = ?").get(req.user.id);
   const premium = row?.premium_until && new Date(row.premium_until) > new Date();
   if (!premium && (!row || row.count >= 3)) return res.status(429).json({ erro: "limite_atingido" });
